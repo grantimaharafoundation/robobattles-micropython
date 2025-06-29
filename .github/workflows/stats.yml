@@ -1,9 +1,7 @@
 name: Stats
 
 on:
-  push:
-    branches:
-      - "master"
+  workflow_dispatch:  # Only runs manually from the GitHub UI
 env:
   MAKEOPTS: -j2
 
