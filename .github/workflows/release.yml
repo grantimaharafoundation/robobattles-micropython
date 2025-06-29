@@ -28,8 +28,6 @@ jobs:
           export MICROPY_GIT_TAG=ci-release-${{ github.run_number }}-$(git describe --tags --dirty --always --exclude "@pybricks/*")
           export MICROPY_GIT_HASH=$(echo ${{ github.sha }} | cut -c1-8)
           make $MAKEOPTS -C micropython/mpy-cross
-          make $MAKEOPTS -C bricks/movehub
-          make $MAKEOPTS -C bricks/cityhub
           make $MAKEOPTS -C bricks/technichub
           make $MAKEOPTS -C bricks/primehub
           make $MAKEOPTS -C bricks/essentialhub
@@ -45,7 +43,7 @@ jobs:
           else
             PRERELEASE_FLAG=""
           fi
-          HUBS="movehub cityhub technichub primehub essentialhub"
+          HUBS="technichub primehub essentialhub"
           for HUB in $HUBS; do
             NEW_FILENAME="./bricks/$HUB/build/pybricks-$HUB-${{ env.GITHUB_TAG }}.zip"
             mv "./bricks/$HUB/build/firmware.zip" "$NEW_FILENAME"
