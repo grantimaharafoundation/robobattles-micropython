@@ -250,6 +250,33 @@ static mp_obj_t pb_type_Motor_run(size_t n_args, const mp_obj_t *pos_args, mp_ma
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(pb_type_Motor_run_obj, 1, pb_type_Motor_run);
 
+// pybricks.common.Motor.go
+static mp_obj_t pb_type_Motor_go(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    PB_PARSE_ARGS_METHOD(n_args, pos_args, kw_args,
+        pb_type_Motor_obj_t, self,
+        PB_ARG_REQUIRED(speed_pct));
+
+    // Get the speed percentage from the user.
+    mp_int_t speed_pct = pb_obj_get_int(speed_pct_in);
+
+    // Clamp the speed percentage to the -100 to 100 range.
+    speed_pct = pbio_int_math_bind(speed_pct, -100, 100);
+
+    // Get the motor's maximum speed.
+    int32_t max_speed;
+    int32_t dummy;
+    pbio_control_settings_get_trajectory_limits(&self->srv->control.settings, &max_speed, &dummy, &dummy);
+
+    // Map the percentage to the actual speed.
+    mp_int_t speed = max_speed * speed_pct / 100;
+
+    // Start the motor.
+    pb_assert(pbio_servo_run_forever(self->srv, speed));
+    pb_type_awaitable_update_all(self->device_base.awaitables, PB_TYPE_AWAITABLE_OPT_CANCEL_ALL);
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_KW(pb_type_Motor_go_obj, 1, pb_type_Motor_go);
+
 // pybricks.common.Motor.hold
 static mp_obj_t pb_type_Motor_hold(mp_obj_t self_in) {
     pb_type_Motor_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -480,6 +507,7 @@ static const mp_rom_map_elem_t pb_type_Motor_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_speed), MP_ROM_PTR(&pb_type_Motor_speed_obj) },
     { MP_ROM_QSTR(MP_QSTR_reset_angle), MP_ROM_PTR(&pb_type_Motor_reset_angle_obj) },
     { MP_ROM_QSTR(MP_QSTR_run), MP_ROM_PTR(&pb_type_Motor_run_obj) },
+    { MP_ROM_QSTR(MP_QSTR_go), MP_ROM_PTR(&pb_type_Motor_go_obj) },
     { MP_ROM_QSTR(MP_QSTR_run_time), MP_ROM_PTR(&pb_type_Motor_run_time_obj) },
     { MP_ROM_QSTR(MP_QSTR_run_until_stalled), MP_ROM_PTR(&pb_type_Motor_run_until_stalled_obj) },
     { MP_ROM_QSTR(MP_QSTR_run_angle), MP_ROM_PTR(&pb_type_Motor_run_angle_obj) },
