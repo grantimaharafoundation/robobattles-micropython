@@ -277,8 +277,8 @@ static pbio_error_t pbio_servo_initialize_settings(pbio_servo_t *srv, pbdrv_lego
         .speed_default = DEG_TO_MDEG(settings_reduced->rated_max_speed),
         .speed_tolerance = DEG_TO_MDEG(50),
         .position_tolerance = DEG_TO_MDEG(precision_profile),
-        .acceleration = DEG_TO_MDEG(2000),
-        .deceleration = DEG_TO_MDEG(2000),
+        .acceleration = DEG_TO_MDEG(20000),
+        .deceleration = DEG_TO_MDEG(20000),
         .actuation_max = pbio_observer_voltage_to_torque(srv->observer.model, max_voltage),
         .actuation_max_temporary = pbio_observer_voltage_to_torque(srv->observer.model, max_voltage),
         // The nominal voltage is an indication for the nominal torque limit. To
