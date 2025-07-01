@@ -437,9 +437,20 @@ void pbdrv_legodev_init(void) {
 
 pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_get_uart_dev(pbdrv_legodev_dev_t *legodev) {
     // Device is not a uart device.
-    if (legodev->is_internal || legodev->ext_dev->dcm.connected_type_id != PBDRV_LEGODEV_TYPE_ID_LPF2_UNKNOWN_UART) {
+    if (legodev->is_internal) {
         return NULL;
     }
+
+    // This is a dummy device, so we can ignore the connection state.
+    if (pbdrv_legodev_pup_uart_is_dummy(legodev->ext_dev->uart_dev)) {
+        return legodev->ext_dev->uart_dev;
+    }
+
+    // This is a real device, so it must be a UART device.
+    if (legodev->ext_dev->dcm.connected_type_id != PBDRV_LEGODEV_TYPE_ID_LPF2_UNKNOWN_UART) {
+        return NULL;
+    }
+
     return legodev->ext_dev->uart_dev;
 }
 
@@ -556,7 +567,6 @@ static bool type_id_matches(pbdrv_legodev_type_id_t *type, pbdrv_legodev_type_id
 // Setup dummy motor info
 static void pbdrv_legodev_pup_set_dummy_motor_info(ext_dev_t *dev, pbdrv_legodev_type_id_t type_id) {
     pbdrv_legodev_pup_uart_set_dummy_info(dev->uart_dev, type_id);
-    dev->dcm.connected_type_id = PBDRV_LEGODEV_TYPE_ID_LPF2_UNKNOWN_UART;
 }
 
 pbio_error_t pbdrv_legodev_get_device(pbio_port_id_t port_id, pbdrv_legodev_type_id_t *type_id, pbdrv_legodev_dev_t **legodev) {

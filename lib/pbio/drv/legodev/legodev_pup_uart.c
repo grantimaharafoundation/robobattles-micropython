@@ -233,6 +233,10 @@ static pbdrv_legodev_pup_uart_data_set_t data_set_bufs[PBDRV_CONFIG_LEGODEV_PUP_
 
 #define PBIO_PT_WAIT_READY(pt, expr) PT_WAIT_UNTIL((pt), (expr) != PBIO_ERROR_AGAIN)
 
+bool pbdrv_legodev_pup_uart_is_dummy(pbdrv_legodev_pup_uart_dev_t *ludev) {
+    return ludev->is_dummy;
+}
+
 // Set up dummy motor info
 void pbdrv_legodev_pup_uart_set_dummy_info(pbdrv_legodev_pup_uart_dev_t *ludev, pbdrv_legodev_type_id_t type_id) {
     ludev->is_dummy = true;
@@ -751,7 +755,6 @@ static PT_THREAD(pbdrv_legodev_pup_uart_synchronize_thread(pbdrv_legodev_pup_uar
     PT_BEGIN(&ludev->pt);
 
     // reset state for new device
-    ludev->is_dummy = false; // AI added this. Theoretically happens when a motor is plugged in after a program has already been running with a dummy motor initialized. Untested.
     ludev->device_info.type_id = PBDRV_LEGODEV_TYPE_ID_NONE;
     ludev->device_info.mode = 0;
     ludev->ext_mode = 0;

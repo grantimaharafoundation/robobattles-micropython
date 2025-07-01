@@ -19,6 +19,8 @@ typedef struct _pbdrv_legodev_pup_uart_dev_t pbdrv_legodev_pup_uart_dev_t;
 
 pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_pup_uart_configure(uint8_t device_index, uint8_t uart_driver_index, pbio_dcmotor_t *dcmotor);
 
+bool pbdrv_legodev_pup_uart_is_dummy(pbdrv_legodev_pup_uart_dev_t *ludev);
+
 void pbdrv_legodev_pup_uart_set_dummy_info(pbdrv_legodev_pup_uart_dev_t *ludev, pbdrv_legodev_type_id_t type_id);
 
 pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_get_uart_dev(pbdrv_legodev_dev_t *legodev);
