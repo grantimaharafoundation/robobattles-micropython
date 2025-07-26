@@ -954,9 +954,7 @@ sync:
         pbio_servo_t *srv;
         ludev->err = pbio_servo_get_servo(ludev->legodev, &srv);
         if (ludev->err == PBIO_SUCCESS) {
-            // TODO: Get gear ratio from device-specific data.
-            // For now, we use 1:1 for all motors.
-            ludev->err = pbio_servo_initialize_settings(srv, ludev->device_info.type_id, 1000, 0);
+            ludev->err = pbio_servo_initialize_settings(srv, ludev->device_info.type_id, srv->gear_ratio, srv->precision_profile);
         }
         if (ludev->err != PBIO_SUCCESS) {
             PT_EXIT(&ludev->pt);

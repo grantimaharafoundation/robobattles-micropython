@@ -372,6 +372,10 @@ pbio_error_t pbio_servo_setup(pbio_servo_t *srv, pbdrv_legodev_type_id_t type, p
     // Reset state
     pbio_control_reset(&srv->control);
 
+    // Store settings so they can be restored when plugging in a motor late.
+    srv->gear_ratio = gear_ratio;
+    srv->precision_profile = precision_profile;
+
     // Load default settings for this device type.
     err = pbio_servo_initialize_settings(srv, type, gear_ratio, precision_profile);
     if (err != PBIO_SUCCESS) {
