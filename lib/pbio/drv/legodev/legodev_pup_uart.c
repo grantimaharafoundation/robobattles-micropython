@@ -949,14 +949,14 @@ sync:
     ludev->data_set->time = pbdrv_clock_get_ms();
     ludev->data_set->size = 0;
 
-    // If the device is a servo, initialize its settings.
+    // If the device is a servo and it's being plugged in late,
+    // re-initialize its settings for the given motor type.
     if (pbdrv_legodev_spec_device_category_match(ludev->device_info.type_id, PBDRV_LEGODEV_TYPE_ID_ANY_ENCODED_MOTOR)) {
         pbio_servo_t *srv;
         ludev->err = pbio_servo_get_servo(ludev->legodev, &srv);
-        if (ludev->err == PBIO_SUCCESS) {
-            // TODO: Get gear ratio from device-specific data.
-            // For now, we use 1:1 for all motors.
-            ludev->err = pbio_servo_initialize_settings(srv, ludev->device_info.type_id, 1000, 0);
+        // Make sure gear_ratio isn't 0, otherwise it hasn't yet been set up in pb_type_Motor_make_new.
+        if (ludev->err == PBIO_SUCCESS && srv->gear_ratio != 0) {
+            ludev->err = pbio_servo_initialize_settings(srv, ludev->device_info.type_id, srv->gear_ratio, srv->precision_profile);
         }
         if (ludev->err != PBIO_SUCCESS) {
             PT_EXIT(&ludev->pt);
