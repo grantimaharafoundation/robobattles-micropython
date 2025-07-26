@@ -951,11 +951,11 @@ sync:
 
     // If the device is a servo and it's being plugged in late,
     // re-initialize its settings for the given motor type.
-    // Skip if it hasn't already been set up in pb_type_Motor_make_new.
-    if (pbdrv_legodev_spec_device_category_match(ludev->device_info.type_id, PBDRV_LEGODEV_TYPE_ID_ANY_ENCODED_MOTOR) && srv->gear_ratio != 0) {
+    if (pbdrv_legodev_spec_device_category_match(ludev->device_info.type_id, PBDRV_LEGODEV_TYPE_ID_ANY_ENCODED_MOTOR)) {
         pbio_servo_t *srv;
         ludev->err = pbio_servo_get_servo(ludev->legodev, &srv);
-        if (ludev->err == PBIO_SUCCESS) {
+        // Make sure gear_ratio isn't 0, otherwise it hasn't yet been set up in pb_type_Motor_make_new.
+        if (ludev->err == PBIO_SUCCESS && srv->gear_ratio != 0) {
             printf("a\n");
             ludev->err = pbio_servo_initialize_settings(srv, ludev->device_info.type_id, srv->gear_ratio, srv->precision_profile);
         }
