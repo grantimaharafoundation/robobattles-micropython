@@ -10,6 +10,7 @@
 #include <pbio/dcmotor.h>
 #include <pbio/int_math.h>
 #include <pbio/servo.h>
+#include <stdio.h>
 
 #include "py/mphal.h"
 #include "py/obj.h"
