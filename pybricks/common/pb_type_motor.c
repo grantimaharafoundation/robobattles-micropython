@@ -118,9 +118,9 @@ static mp_obj_t pb_type_Motor_make_new(const mp_obj_type_t *type, size_t n_args,
     self->srv->precision_profile = precision_profile;
 
     printf("1\n");
-    printf(gear_ratio);
+    printf("%d", gear_ratio);
     printf("\n");
-    printf(precision_profile);
+    printf("%d", precision_profile);
     printf("2\n");
 
     #if PYBRICKS_PY_COMMON_CONTROL
