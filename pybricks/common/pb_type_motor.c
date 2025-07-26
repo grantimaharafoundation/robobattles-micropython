@@ -116,6 +116,12 @@ static mp_obj_t pb_type_Motor_make_new(const mp_obj_type_t *type, size_t n_args,
     self->srv->gear_ratio = gear_ratio;
     self->srv->precision_profile = precision_profile;
 
+    printf("1\n");
+    printf(gear_ratio);
+    printf("\n");
+    printf(precision_profile);
+    printf("2\n");
+
     #if PYBRICKS_PY_COMMON_CONTROL
     // Create an instance of the Control class
     self->control = pb_type_Control_obj_make_new(&self->srv->control);
