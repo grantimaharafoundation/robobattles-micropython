@@ -252,7 +252,7 @@ static pbio_error_t pbio_servo_stop_from_dcmotor(void *servo, bool clear_parent)
  * @param [in]    precision_profile  Position tolerance around target in degrees. Set to 0 to load default profile for this motor.
  * @return                           Error code.
  */
-static pbio_error_t pbio_servo_initialize_settings(pbio_servo_t *srv, pbdrv_legodev_type_id_t type, int32_t gear_ratio, int32_t precision_profile) {
+pbio_error_t pbio_servo_initialize_settings(pbio_servo_t *srv, pbdrv_legodev_type_id_t type, int32_t gear_ratio, int32_t precision_profile) {
 
     // Gear ratio must be strictly positive.
     if (gear_ratio < 1) {

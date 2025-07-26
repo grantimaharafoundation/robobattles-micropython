@@ -142,6 +142,7 @@ typedef struct _pbio_servo_settings_reduced_t {
 /**@{*/
 pbio_error_t pbio_servo_get_servo(pbdrv_legodev_dev_t *legodev, pbio_servo_t **srv);
 pbio_error_t pbio_servo_setup(pbio_servo_t *srv, pbdrv_legodev_type_id_t type, pbio_direction_t direction, int32_t gear_ratio, bool reset_angle, int32_t precision_profile);
+pbio_error_t pbio_servo_initialize_settings(pbio_servo_t *srv, pbdrv_legodev_type_id_t type, int32_t gear_ratio, int32_t precision_profile);
 /**@}*/
 
 /** @cond INTERNAL */

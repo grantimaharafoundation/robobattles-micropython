@@ -429,7 +429,7 @@ void pbdrv_legodev_init(void) {
         // Initialize uart device manager.
         pbio_dcmotor_t *dcmotor;
         pbio_dcmotor_get_dcmotor(legodev, &dcmotor);
-        legodev->ext_dev->uart_dev = pbdrv_legodev_pup_uart_configure(legodev_data->ioport_index, port_data->uart_driver_index, dcmotor);
+        legodev->ext_dev->uart_dev = pbdrv_legodev_pup_uart_configure(legodev, legodev_data->ioport_index, port_data->uart_driver_index, dcmotor);
 
     }
     process_start(&pbio_legodev_pup_process);

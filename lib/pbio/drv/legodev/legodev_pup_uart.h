@@ -10,6 +10,8 @@
 
 #include <pbio/dcmotor.h>
 
+struct _pbdrv_legodev_dev_t;
+
 /**
  * Opaque handle to a legodev pup UART device instance.
  */
@@ -17,7 +19,7 @@ typedef struct _pbdrv_legodev_pup_uart_dev_t pbdrv_legodev_pup_uart_dev_t;
 
 #if PBDRV_CONFIG_LEGODEV_PUP_UART
 
-pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_pup_uart_configure(uint8_t device_index, uint8_t uart_driver_index, pbio_dcmotor_t *dcmotor);
+pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_pup_uart_configure(struct _pbdrv_legodev_dev_t *legodev, uint8_t device_index, uint8_t uart_driver_index, pbio_dcmotor_t *dcmotor);
 
 bool pbdrv_legodev_pup_uart_is_dummy(pbdrv_legodev_pup_uart_dev_t *ludev);
 
@@ -31,7 +33,7 @@ void pbdrv_legodev_pup_uart_process_poll(void);
 
 #else // PBDRV_CONFIG_LEGODEV_PUP_UART
 
-static inline pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_pup_uart_configure(uint8_t device_index, uint8_t uart_driver_index, pbio_dcmotor_t *dcmotor) {
+static inline pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_pup_uart_configure(struct _pbdrv_legodev_dev_t *legodev, uint8_t device_index, uint8_t uart_driver_index, pbio_dcmotor_t *dcmotor) {
     return NULL;
 }
 

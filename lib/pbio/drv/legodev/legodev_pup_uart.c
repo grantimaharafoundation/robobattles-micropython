@@ -46,6 +46,7 @@
 #include "pbio/error.h"
 #include "pbio/event.h"
 #include "pbio/port.h"
+#include "pbio/servo.h"
 #include "pbio/util.h"
 
 #include <pbio/dcmotor.h>
@@ -156,6 +157,8 @@ typedef struct {
  * struct ev3_uart_port_data - Data for EV3/LPF2 UART Sensor communication
  */
 struct _pbdrv_legodev_pup_uart_dev_t {
+    /** The parent legodev. */
+    struct _pbdrv_legodev_dev_t *legodev;
     /** Main protothread, first used for synchronization thread and then for data send thread. */
     struct pt pt;
     /** Protothread for receiving sensor data, running in parallel to the data send thread. */
@@ -268,8 +271,9 @@ void pbdrv_legodev_pup_uart_set_dummy_info(pbdrv_legodev_pup_uart_dev_t *ludev, 
     };
 }
 
-pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_pup_uart_configure(uint8_t device_index, uint8_t uart_driver_index, pbio_dcmotor_t *dcmotor) {
+pbdrv_legodev_pup_uart_dev_t *pbdrv_legodev_pup_uart_configure(struct _pbdrv_legodev_dev_t *legodev, uint8_t device_index, uint8_t uart_driver_index, pbio_dcmotor_t *dcmotor) {
     pbdrv_legodev_pup_uart_dev_t *ludev = &ludevs[device_index];
+    ludev->legodev = legodev;
     ludev->dcmotor = dcmotor;
     ludev->tx_msg = &bufs[device_index][BUF_TX_MSG][0];
     ludev->rx_msg = &bufs[device_index][BUF_RX_MSG][0];
@@ -944,6 +948,20 @@ sync:
     etimer_reset_with_new_interval(&ludev->timer, EV3_UART_DATA_KEEP_ALIVE_TIMEOUT);
     ludev->data_set->time = pbdrv_clock_get_ms();
     ludev->data_set->size = 0;
+
+    // If the device is a servo, initialize its settings.
+    if (pbdrv_legodev_spec_device_category_match(ludev->device_info.type_id, PBDRV_LEGODEV_TYPE_ID_ANY_ENCODED_MOTOR)) {
+        pbio_servo_t *srv;
+        ludev->err = pbio_servo_get_servo(ludev->legodev, &srv);
+        if (ludev->err == PBIO_SUCCESS) {
+            // TODO: Get gear ratio from device-specific data.
+            // For now, we use 1:1 for all motors.
+            ludev->err = pbio_servo_initialize_settings(srv, ludev->device_info.type_id, 1000, 0);
+        }
+        if (ludev->err != PBIO_SUCCESS) {
+            PT_EXIT(&ludev->pt);
+        }
+    }
 
     ludev->status = PBDRV_LEGODEV_PUP_UART_STATUS_DATA;
 
