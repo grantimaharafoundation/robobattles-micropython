@@ -11,6 +11,7 @@
 #include <pbdrv/clock.h>
 #include <pbdrv/counter.h>
 #include <pbdrv/legodev.h>
+#include <stdio.h>
 
 #include <pbio/angle.h>
 #include <pbio/int_math.h>
@@ -351,6 +352,8 @@ pbio_error_t pbio_servo_initialize_settings(pbio_servo_t *srv, pbdrv_legodev_typ
  */
 pbio_error_t pbio_servo_setup(pbio_servo_t *srv, pbdrv_legodev_type_id_t type, pbio_direction_t direction, int32_t gear_ratio, bool reset_angle, int32_t precision_profile) {
     pbio_error_t err;
+
+    printf("setup\n");
 
     // Unregister this servo from control loop updates.
     pbio_servo_update_loop_set_state(srv, false);
