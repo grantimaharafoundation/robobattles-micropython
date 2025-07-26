@@ -10,7 +10,6 @@
 #include <pbio/dcmotor.h>
 #include <pbio/int_math.h>
 #include <pbio/servo.h>
-#include <stdio.h>
 
 #include "py/mphal.h"
 #include "py/obj.h"
@@ -116,8 +115,6 @@ static mp_obj_t pb_type_Motor_make_new(const mp_obj_type_t *type, size_t n_args,
     // Store settings so they can be restored when plugging in a motor late.
     self->srv->gear_ratio = gear_ratio;
     self->srv->precision_profile = precision_profile;
-
-    printf("1\n");
 
     #if PYBRICKS_PY_COMMON_CONTROL
     // Create an instance of the Control class
