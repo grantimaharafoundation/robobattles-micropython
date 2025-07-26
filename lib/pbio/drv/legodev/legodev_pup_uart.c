@@ -954,7 +954,7 @@ sync:
         pbio_servo_t *srv;
         ludev->err = pbio_servo_get_servo(ludev->legodev, &srv);
         if (ludev->err == PBIO_SUCCESS) {
-            ludev->err = pbio_servo_initialize_settings(srv, ludev->device_info.type_id, srv->gear_ratio, srv->precision_profile);
+            ludev->err = pbio_servo_initialize_settings(srv, ludev->device_info.type_id, 1000, 0);
         }
         if (ludev->err != PBIO_SUCCESS) {
             PT_EXIT(&ludev->pt);
