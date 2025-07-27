@@ -86,8 +86,8 @@ int main(int argc, char **argv) {
     pbio_init();
     pbsys_init();
 
-    // Automatically start single button hubs
-    #if !PBSYS_CONFIG_USER_PROGRAM_AUTO_START
+    // Automatically start program on boot with Technic hub.
+    #if PYBRICKS_HUB_TECHNICHUB
     // Ensure the Bluetooth driver is fully ready before requesting the program start.
     // Otherwise, the program will run briefly and then stop
     // pbsys_init() starts Bluetooth initialization, but might not wait for it to be complete.
