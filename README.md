@@ -6,7 +6,7 @@
 
 ## Issues & discussion
 - :arrow_right: [Issues for all Pybricks repositories](https://github.com/pybricks/support/issues).
-- :arrow_right: [Discussions for all Pybricks repositories](https://github.com/orgs/pybricks/discussions).
+- :arrow_right: [Discussions for all Pybricks repositories](https://github.com/orgs/pybricks/discussions). 
 
 # Pybricks
 
