@@ -97,14 +97,16 @@ int main(int argc, char **argv) {
     // Ensure the Bluetooth driver is fully ready before requesting the program start.
     // Otherwise, the program will run briefly and then stop
     // pbsys_init() starts Bluetooth initialization, but might not wait for it to be complete.
-    while (!pbdrv_bluetooth_is_ready()) {
-        pbio_do_one_event();
-    }
+    
 
     // Give the system some time to stabilize before starting the program.
     // This helps prevent issues where stopping the program later causes a freeze/reset.
     uint32_t start_time = pbdrv_clock_get_ms();
     while (pbdrv_clock_get_ms() - start_time < 10) {
+        pbio_do_one_event();
+    }
+
+    while (!pbdrv_bluetooth_is_ready()) {
         pbio_do_one_event();
     }
 
