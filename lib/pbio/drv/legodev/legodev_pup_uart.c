@@ -964,6 +964,10 @@ sync:
         }
     }
 
+    printf("[Debug] Motor synced!\n");
+    printf("Type ID: %d\n", ludev->device_info.type_id);
+    printf("Capabilities: 0x%02X\n", ludev->device_info.flags);
+
     ludev->status = PBDRV_LEGODEV_PUP_UART_STATUS_DATA;
 
     PT_END(&ludev->pt);
