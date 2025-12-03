@@ -134,7 +134,7 @@ static PT_THREAD(update_left_right_button_wait_state(bool left_button_pressed, b
         // Wait for either button.
         PT_WAIT_UNTIL(pt, left_button_pressed || right_button_pressed);
 
-        first_press_time = pbdrv_clock_get_ms();
+        /*first_press_time = pbdrv_clock_get_ms();
 
         // On right, increment slot when possible.
         if (right_button_pressed && selected_slot < 4) {
@@ -159,7 +159,7 @@ static PT_THREAD(update_left_right_button_wait_state(bool left_button_pressed, b
         } else {
             // Successful switch. And UI was already updated.
             previous_slot = selected_slot;
-        }
+        }*/
     }
 
     PT_END(pt);

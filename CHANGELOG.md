@@ -2,11 +2,14 @@
 
 # Changelog
 
-## [13.0.3] - 2025-12-02
+## [13.0.3] - 2025-12-03
 
 ### Added
 
-- Added support for Spike Prime hub
+- Added support for Prime hub
+- Prevented bluetooth button on Prime hub from disabling bluetooth
+- Disabled left/right buttons on Prime hub
+- Swapped button behavior for more consistent behavior when connected to bluetooth and no program is running: now short press shuts down and long press attempts to run program
 
 ### Fixed
 
@@ -33,6 +36,10 @@
 - Automatically import all modules to simplify code
 - Added customizable bluetooth light patterns to differentiate hubs
 - Allowed program to start without motor being plugged in
+
+### Fixed
+
+- Xbox controller connection issues when multiple hubs and controllers are in same environment. Previously, when a hub starts running a program, it searches indefinitely for any Xbox controller that is either searching or pairing. If it finds a controller that is pairing, it pairs to that controller. If it finds a controller that is Searching, one of two things happen: 1) If the controller signals that it was last paired to this hub, they connect. 2) If the controller signals that it was last paired to a different hub, they do not connect, the hub switches back into bluetooth mode, AND the controller permanently forgets the last hub it was paired to. In this update, the hub DOES remember the last controller it was paired to. When a hub starts running a program, it searches indefinitely for any Xbox controller that is either searching or pairing. (same as before) But now if it finds a controller that is searching, if the controller signals that it was last paired to a different hub, the hub completely ignores the controller and keeps searching for another controller.
 
 
 ## [3.6.1] - 2025-03-11
