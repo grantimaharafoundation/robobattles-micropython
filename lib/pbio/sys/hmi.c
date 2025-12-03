@@ -33,7 +33,9 @@ static struct pt update_program_run_button_wait_state_pt;
 // The selected slot is not persistent across reboot, so that the first slot
 // is always active on boot. This allows consistently starting programs without
 // visibility of the display.
+#if PBSYS_CONFIG_HMI_NUM_SLOTS || PBSYS_CONFIG_BLUETOOTH_TOGGLE || !PBSYS_CONFIG_HMI_SHORT_PRESS_TURNS_OFF_IDLE
 static uint8_t selected_slot = 0;
+#endif
 
 #if !PBSYS_CONFIG_BLUETOOTH_TOGGLE
 // Active button press was a long press
