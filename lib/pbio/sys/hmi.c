@@ -81,7 +81,11 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
             #endif
         } else {
             // Short press tries to start running program when in bluetooth mode
+            #if PBSYS_CONFIG_HMI_SHORT_PRESS_TURNS_OFF_IDLE
+            pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+            #else
             pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
+            #endif
         }
         #endif
     }
