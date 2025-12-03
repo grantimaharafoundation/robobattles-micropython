@@ -90,14 +90,14 @@ int main(int argc, char **argv) {
     pbio_init();
     pbsys_init();
 
-    printf("aStart");
-
     // Automatically start program on boot with Technic hub.
    //#if PYBRICKS_HUB_TECHNICHUB
     // Ensure the Bluetooth driver is fully ready before requesting the program start.
     // Otherwise, the program will run briefly and then stop
     // pbsys_init() starts Bluetooth initialization, but might not wait for it to be complete.
-    
+    while (!pbdrv_bluetooth_is_ready()) {
+        pbio_do_one_event();
+    }
 
     // Give the system some time to stabilize before starting the program.
     // This helps prevent issues where stopping the program later causes a freeze/reset.
@@ -106,11 +106,11 @@ int main(int argc, char **argv) {
         pbio_do_one_event();
     }
 
-    while (!pbdrv_bluetooth_is_ready()) {
-        pbio_do_one_event();
-    }
+    printf("aStart");
 
     pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
+
+    printf("bStart");
     //#endif
 
     // Keep loading and running user programs until shutdown is requested.
@@ -169,9 +169,9 @@ int main(int argc, char **argv) {
         // On hubs with USB battery chargers, we can't turn off power while
         // USB is connected, otherwise it disables the op-amp that provides
         // the battery voltage to the ADC.
-        if (pbdrv_usb_get_bcd() != PBDRV_USB_BCD_NONE) {
+        /*if (pbdrv_usb_get_bcd() != PBDRV_USB_BCD_NONE) {
             continue;
-        }
+        }*/
         #endif
 
         pbdrv_reset_power_off();
