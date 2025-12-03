@@ -2,7 +2,38 @@
 
 # Changelog
 
-## [Unreleased]
+## [13.0.3] - 2025-12-02
+
+### Added
+
+- Added support for Spike Prime hub
+
+### Fixed
+
+- Fixed issue with late unplug/replug crashing the program when using motor functions other than Motor.dc
+- Fixed other consistency issues with late plug
+
+## [13.0.2] - 2025-07-01
+
+### Added
+
+- Added simplified Motor.go method with normalized -100 to 100 input for easier programming
+- Defaulted all motors to max acceleration to avoid needing to manually set fast acceleration in code
+
+## [13.0.1] - 2025-06-30
+
+### Fixed
+
+- Fixed issue when plugging in motor late when program uses more than one motor
+
+## [13.0.0] - 2025-06-29
+
+### Added
+
+- Automatically import all modules to simplify code
+- Added customizable bluetooth light patterns to differentiate hubs
+- Allowed program to start without motor being plugged in
+
 
 ## [3.6.1] - 2025-03-11
 
