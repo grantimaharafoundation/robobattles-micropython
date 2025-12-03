@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 
     // Give the system some time to stabilize before starting the program.
     // This helps prevent issues where stopping the program later causes a freeze/reset.
-    uint32_t start = pbdrv_clock_get_ms();
+    //uint32_t start = pbdrv_clock_get_ms();
 
     // Wait until Bluetooth starts advertising (BT LED begins to flash),
     // or until a timeout, or until shutdown is requested.
