@@ -107,7 +107,7 @@ static PT_THREAD(update_bluetooth_button_wait_state(bool button_pressed)) {
         // button may still be pressed during user program
         PT_WAIT_UNTIL(pt, !button_pressed);
         PT_WAIT_UNTIL(pt, button_pressed);
-        pbsys_storage_settings_bluetooth_enabled_request_toggle();
+        //pbsys_storage_settings_bluetooth_enabled_request_toggle();
     }
 
     PT_END(pt);
