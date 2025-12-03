@@ -76,7 +76,7 @@ void pbsys_program_stop_poll(void) {
         if (!stop_button_pressed) {
             stop_button_pressed = true;
             // Move program stop behavior to hmi.c
-            //pbsys_program_stop(false);
+            // pbsys_program_stop(false);
         }
     } else {
         stop_button_pressed = false;

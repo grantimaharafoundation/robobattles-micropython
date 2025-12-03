@@ -92,7 +92,7 @@ static PT_THREAD(update_bluetooth_button_wait_state(bool button_pressed)) {
         // button may still be pressed during user program
         PT_WAIT_UNTIL(pt, !button_pressed);
         PT_WAIT_UNTIL(pt, button_pressed);
-        //pbsys_storage_settings_bluetooth_enabled_request_toggle();
+        // pbsys_storage_settings_bluetooth_enabled_request_toggle();
     }
 
     PT_END(pt);
@@ -219,7 +219,9 @@ void pbsys_hmi_poll(void) {
                 if (!long_pressed) {
                     // Stop program if currently running. This puts hub in bluetooth mode.
                     if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+                        #if PBSYS_CONFIG_PROGRAM_STOP
                         pbsys_program_stop(false);
+                        #endif
                     } else {
                         // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
                         pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
