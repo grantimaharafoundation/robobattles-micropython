@@ -101,10 +101,11 @@ int main(int argc, char **argv) {
 
     // Give the system some time to stabilize before starting the program.
     // This helps prevent issues where stopping the program later causes a freeze/reset.
-    uint32_t start_time = pbdrv_clock_get_ms();
-    while (pbdrv_clock_get_ms() - start_time < 50) {
-        pbio_do_one_event();
-    }
+    pbio_do_one_event();
+    pbio_do_one_event();
+    pbio_do_one_event();
+    pbio_do_one_event();
+    pbio_do_one_event();
 
     printf("aStart");
 
