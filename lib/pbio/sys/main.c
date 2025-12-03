@@ -80,6 +80,8 @@ pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id
     return PBIO_SUCCESS;
 }
 
+static bool autostart_done = false;
+
 /**
  * Initializes the PBIO library, runs custom main program, and handles shutdown.
  *
@@ -92,51 +94,17 @@ int main(int argc, char **argv) {
 
     // Automatically start program on boot with Technic hub.
    //#if PYBRICKS_HUB_TECHNICHUB
-    // Ensure the Bluetooth driver is fully ready before requesting the program start.
-    // Otherwise, the program will run briefly and then stop
-    // pbsys_init() starts Bluetooth initialization, but might not wait for it to be complete.
-    while (!pbdrv_bluetooth_is_ready()) {
-        pbio_do_one_event();
-    }
-
-    // Give the system some time to stabilize before starting the program.
-    // This helps prevent issues where stopping the program later causes a freeze/reset.
-    //uint32_t start = pbdrv_clock_get_ms();
-
-    // Wait until Bluetooth starts advertising (BT LED begins to flash),
-    // or until a timeout, or until shutdown is requested.
-    while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING) &&
-        !pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
-        // Let all Contiki/pbio processes run, including Bluetooth and HMI.
-        while (pbio_do_one_event()) {
+    if (!autostart_done) {
+        // Autostart
+        while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING) &&
+            !pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
+            // Let all Contiki/pbio processes run, including Bluetooth and HMI.
+            while (pbio_do_one_event()) {
+            }
         }
+        autostart_done = true;
+        pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
     }
-
-    while (pbio_do_one_event()) {
-        }
-
-        while (!pbdrv_bluetooth_is_ready()) {
-        pbio_do_one_event();
-    }
-
-    // Give the system some time to stabilize before starting the program.
-    // This helps prevent issues where stopping the program later causes a freeze/reset.
-    //uint32_t start = pbdrv_clock_get_ms();
-
-    // Wait until Bluetooth starts advertising (BT LED begins to flash),
-    // or until a timeout, or until shutdown is requested.
-    while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING) &&
-        !pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
-        // Let all Contiki/pbio processes run, including Bluetooth and HMI.
-        while (pbio_do_one_event()) {
-        }
-    }
-
-    printf("aStart");
-
-    pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
-
-    printf("bStart");
     //#endif
 
     // Keep loading and running user programs until shutdown is requested.
