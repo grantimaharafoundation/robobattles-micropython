@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
     while (!pbdrv_bluetooth_is_ready()) {
         pbio_do_one_event();
     }
-    pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
+    pbsys_main_program_request_start(0, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
     //#endif
 
     // Keep loading and running user programs until shutdown is requested.
