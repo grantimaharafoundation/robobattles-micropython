@@ -103,6 +103,16 @@ int main(int argc, char **argv) {
 
     pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
 
+        #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
+    // Give the system extra time to stabilize before starting the program on spike prime hub.
+    // Without this, after an autostart run, a short or long press of the power button causes a freeze/reset.
+    // Couldn't find any more robust solutions. 50ms still freezes, 100ms doesn't
+    uint32_t start_time = pbdrv_clock_get_ms();
+    while (pbdrv_clock_get_ms() - start_time < 400) {
+        pbio_do_one_event();
+    }
+    #endif
+
     // Keep loading and running user programs until shutdown is requested.
     while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
 
