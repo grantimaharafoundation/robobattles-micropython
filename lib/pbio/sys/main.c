@@ -106,6 +106,10 @@ int main(int argc, char **argv) {
         pbio_do_one_event();
     }
 
+    while (pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
+        pbio_do_one_event();
+    }
+
     printf("aStart");
 
     pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
@@ -169,9 +173,9 @@ int main(int argc, char **argv) {
         // On hubs with USB battery chargers, we can't turn off power while
         // USB is connected, otherwise it disables the op-amp that provides
         // the battery voltage to the ADC.
-        /*if (pbdrv_usb_get_bcd() != PBDRV_USB_BCD_NONE) {
+        if (pbdrv_usb_get_bcd() != PBDRV_USB_BCD_NONE) {
             continue;
-        }*/
+        }
         #endif
 
         pbdrv_reset_power_off();
