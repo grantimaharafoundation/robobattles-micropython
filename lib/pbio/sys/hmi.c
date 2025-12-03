@@ -77,7 +77,7 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
         if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
             printf("XX");
             // Short press shuts down hub when program is running
-            //pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+            pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
         } else {
             printf("YY");
             // Short press tries to start running program when in bluetooth mode
@@ -244,11 +244,11 @@ void pbsys_hmi_poll(void) {
                     // Stop program if currently running. This puts hub in bluetooth mode.
                     if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
                         printf("BB");
-                        //pbsys_program_stop(false);
+                        pbsys_program_stop(false);
                     } else {
                         printf("CC");
                         // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
-                        //pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+                        pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
                     }
                 }
                 long_pressed = true;

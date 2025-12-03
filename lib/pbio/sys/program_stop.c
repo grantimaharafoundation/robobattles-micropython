@@ -76,9 +76,9 @@ void pbsys_program_stop_poll(void) {
         if (!stop_button_pressed) {
             stop_button_pressed = true;
             // On hubs without bluetooth button, move program stop behavior to hmi.c
-            #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
+            /*#if PBSYS_CONFIG_BLUETOOTH_TOGGLE
             pbsys_program_stop(false);
-            #endif
+            #endif*/
         }
     } else {
         stop_button_pressed = false;
