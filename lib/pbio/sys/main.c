@@ -92,16 +92,25 @@ int main(int argc, char **argv) {
 
     // Automatically start program on boot with Technic hub.
    //#if PYBRICKS_HUB_TECHNICHUB
+    // Ensure the Bluetooth driver is fully ready before requesting the program start.
+    // Otherwise, the program will run briefly and then stop
+    // pbsys_init() starts Bluetooth initialization, but might not wait for it to be complete.
+    while (!pbdrv_bluetooth_is_ready()) {
+        pbio_do_one_event();
+    }
 
-        // Autostart
-        while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) &&
-            !pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING) &&
-            !pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
+    // Give the system some time to stabilize before starting the program.
+    // This helps prevent issues where stopping the program later causes a freeze/reset.
+    uint32_t start_time = pbdrv_clock_get_ms();
+    while (pbdrv_clock_get_ms() - start_time < 200) {
+        pbio_do_one_event();
+    }
 
-            while (pbio_do_one_event()) {
-            }
-        }
-        pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
+    printf("aStart");
+
+    pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
+
+    printf("bStart");
     //#endif
 
     // Keep loading and running user programs until shutdown is requested.
