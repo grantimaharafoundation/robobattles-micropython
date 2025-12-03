@@ -3,6 +3,8 @@
 
 #include <pbsys/config.h>
 
+#include <stdio.h>
+
 #if PBSYS_CONFIG_MAIN
 
 #include <stdint.h>
@@ -86,23 +88,25 @@ int main(int argc, char **argv) {
     pbio_init();
     pbsys_init();
 
+    printf("aStart");
+
     // Automatically start program on boot with Technic hub.
-    //#if PYBRICKS_HUB_TECHNICHUB
+    #if PYBRICKS_HUB_TECHNICHUB
     // Ensure the Bluetooth driver is fully ready before requesting the program start.
     // Otherwise, the program will run briefly and then stop
     // pbsys_init() starts Bluetooth initialization, but might not wait for it to be complete.
-    /*while (!pbdrv_bluetooth_is_ready()) {
+    while (!pbdrv_bluetooth_is_ready()) {
         pbio_do_one_event();
     }
-    pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);*/
-    //#endif
+    pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
+    #endif
 
     // Keep loading and running user programs until shutdown is requested.
     while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
 
-        //#if PBSYS_CONFIG_USER_PROGRAM_AUTO_START
-        pbsys_main_program_request_start(0, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
-        //#endif
+        #if PBSYS_CONFIG_USER_PROGRAM_AUTO_START
+        pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_REPL, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
+        #endif
 
         // REVISIT: this can be long waiting, so we could do a more efficient
         // wait (i.e. __WFI() on embedded system)
