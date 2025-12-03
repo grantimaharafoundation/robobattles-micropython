@@ -67,11 +67,11 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
         PT_WAIT_UNTIL(pt, button_pressed);
         PT_WAIT_UNTIL(pt, !button_pressed);
 
-        #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
+        /*#if PBSYS_CONFIG_BLUETOOTH_TOGGLE
         // If we made it through a full press and release, without the user
         // program running, then start the currently selected user program.
         pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
-        #else
+        #else*/
         if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
             // Short press shuts down hub when program is running
             pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
@@ -79,7 +79,7 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
             // Short press tries to start running program when in bluetooth mode
             pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
         }
-        #endif
+        //#endif
     }
 
     PT_END(pt);
@@ -233,6 +233,11 @@ void pbsys_hmi_poll(void) {
             if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
                 // Has a bluetooth button or doesn't have a program stop button (no stop program methods available for these hubs)
                 #if PBSYS_CONFIG_BLUETOOTH_TOGGLE || !PBSYS_CONFIG_PROGRAM_STOP
+                #if PBSYS_CONFIG_PROGRAM_STOP
+                if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+                    pbsys_program_stop(false);
+                }
+                #endif
                 pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
                 #else
                 if (!long_pressed) {
