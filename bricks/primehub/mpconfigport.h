@@ -20,7 +20,7 @@
 #define PYBRICKS_PY_COMMON_CONTROL              (1)
 #define PYBRICKS_PY_COMMON_IMU                  (1)
 #define PYBRICKS_PY_COMMON_KEYPAD               (1)
-#define PYBRICKS_PY_COMMON_KEYPAD_HUB_BUTTONS   (4)
+#define PYBRICKS_PY_COMMON_KEYPAD_HUB_BUTTONS   (1)
 #define PYBRICKS_PY_COMMON_LIGHT_ARRAY          (1)
 #define PYBRICKS_PY_COMMON_LIGHT_MATRIX         (1)
 #define PYBRICKS_PY_COMMON_LOGGER               (1)
@@ -45,7 +45,7 @@
 #define PYBRICKS_PY_ROBOTICS_DRIVEBASE_GYRO     (1)
 #define PYBRICKS_PY_ROBOTICS_DRIVEBASE_SPIKE    (1)
 #define PYBRICKS_PY_TOOLS                       (1)
-#define PYBRICKS_PY_TOOLS_HUB_MENU              (1)
+#define PYBRICKS_PY_TOOLS_HUB_MENU              (0)
 #define PYBRICKS_PY_TOOLS_APP_DATA              (1)
 
 // Pybricks options
