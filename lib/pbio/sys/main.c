@@ -80,8 +80,6 @@ pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id
     return PBIO_SUCCESS;
 }
 
-static bool autostart_done = false;
-
 /**
  * Initializes the PBIO library, runs custom main program, and handles shutdown.
  *
@@ -94,17 +92,16 @@ int main(int argc, char **argv) {
 
     // Automatically start program on boot with Technic hub.
    //#if PYBRICKS_HUB_TECHNICHUB
-    if (!autostart_done) {
+
         // Autostart
-        while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING) &&
+        while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) &&
+            !pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING) &&
             !pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
-            // Let all Contiki/pbio processes run, including Bluetooth and HMI.
+
             while (pbio_do_one_event()) {
             }
         }
-        autostart_done = true;
         pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
-    }
     //#endif
 
     // Keep loading and running user programs until shutdown is requested.
