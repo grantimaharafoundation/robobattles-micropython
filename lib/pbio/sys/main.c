@@ -107,9 +107,8 @@ int main(int argc, char **argv) {
     while (pbdrv_clock_get_ms() - start_time < 1000) {
         pbio_do_one_event();
     }
-    #endif
-
     pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
+    #endif
 
     // Keep loading and running user programs until shutdown is requested.
     while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
