@@ -6,6 +6,8 @@
 // TODO: implement additional buttons and menu system (via matrix display) for SPIKE Prime
 // TODO: implement additional buttons and menu system (via screen) for NXT
 
+#include <stdio.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
