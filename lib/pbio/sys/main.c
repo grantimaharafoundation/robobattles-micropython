@@ -18,6 +18,7 @@
 #include <pbsys/core.h>
 #include <pbsys/main.h>
 #include <pbsys/status.h>
+#include <pbsys/storage_settings.h>
 
 #include "program_stop.h"
 #include "storage.h"
@@ -102,9 +103,11 @@ int main(int argc, char **argv) {
 
     // Give the system some time to stabilize before starting the program.
     // This helps prevent issues where stopping the program later causes a freeze/reset.
-    uint32_t start_time = pbdrv_clock_get_ms();
-    while (pbdrv_clock_get_ms() - start_time < 2000) {
-        pbio_do_one_event();
+    if (pbsys_storage_settings_bluetooth_enabled()) {
+        while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING) &&
+            !pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_HOST_CONNECTED)) {
+            pbio_do_one_event();
+        }
     }
 
     pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
