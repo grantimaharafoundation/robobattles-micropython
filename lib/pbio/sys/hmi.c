@@ -244,7 +244,7 @@ void pbsys_hmi_poll(void) {
                     // Stop program if currently running. This puts hub in bluetooth mode.
                     if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
                         printf("BB");
-                        pbsys_program_stop(false);
+                        //pbsys_program_stop(false);
                     } else {
                         printf("CC");
                         // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
