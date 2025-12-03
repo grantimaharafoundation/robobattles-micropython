@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #if PYBRICKS_HUB_PRIMEHUB
-    #include <pbdrv/clock.h>
+#include <pbdrv/clock.h>
 #endif
 
 #include <pbdrv/reset.h>
@@ -100,13 +100,13 @@ int main(int argc, char **argv) {
     }
 
     #if PYBRICKS_HUB_PRIMEHUB
-        // Give the system extra time to stabilize before starting the program.
-        // Without this, after an autostart run, a short or long press of the power button causes a freeze/reset.
-        // Couldn't find any more robust solutions. 50ms still freezes, 100ms doesn't
-        uint32_t start_time = pbdrv_clock_get_ms();
-        while (pbdrv_clock_get_ms() - start_time < 400) {
-            pbio_do_one_event();
-        }
+    // Give the system extra time to stabilize before starting the program.
+    // Without this, after an autostart run, a short or long press of the power button causes a freeze/reset.
+    // Couldn't find any more robust solutions. 50ms still freezes, 100ms doesn't
+    uint32_t start_time = pbdrv_clock_get_ms();
+    while (pbdrv_clock_get_ms() - start_time < 400) {
+        pbio_do_one_event();
+    }
     #endif
 
     pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
