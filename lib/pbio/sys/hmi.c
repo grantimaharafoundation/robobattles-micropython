@@ -218,7 +218,7 @@ void pbsys_hmi_poll(void) {
                         pbsys_program_stop(false);
                         #endif
                     } else {
-                         // Attempt to start program if not currently running
+                        // Attempt to start program if not currently running
                         pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
                     }
                 }
