@@ -2,6 +2,7 @@
 // Copyright (c) 2022 The Pybricks Authors
 
 #include <pbsys/config.h>
+#include "mpconfigport.h"
 
 #if PBSYS_CONFIG_MAIN
 
