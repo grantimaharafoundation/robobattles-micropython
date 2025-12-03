@@ -310,11 +310,12 @@ PROCESS_THREAD(pbsys_bluetooth_process, ev, data) {
         pbdrv_bluetooth_power_on(true);
         PROCESS_WAIT_UNTIL(pbdrv_bluetooth_is_ready());
 
-        if (!pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
-            // Start advertising, and show visual indicator on status light.
-            pbdrv_bluetooth_start_advertising();
-            pbsys_status_set(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING);
-        }
+        etimer_set(&timer, 1000);
+        PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER && etimer_expired(&timer));
+
+        // Start advertising, and show visual indicator on status light.
+        pbdrv_bluetooth_start_advertising();
+        pbsys_status_set(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING);
 
         // Now we are idle. We need to change the Bluetooth state and
         // indicators if a host connects to us, or a user program starts, or we
