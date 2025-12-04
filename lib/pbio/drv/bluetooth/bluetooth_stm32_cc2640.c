@@ -689,7 +689,9 @@ try_again:
         DEBUG_PRINT_PT(pt, "Auth complete: 0x%02x\n", bond_auth_err);
 
         if (bond_auth_err != 0) {
-            if (bond_auth_err == bleInvalidEventId) {
+            if (bond_auth_err == bleInvalidEventId ||
+                bond_auth_err == bleGAPBondRejected ||
+                bond_auth_err == bleGAPConnNotAcceptable) {
                 // Pairing rejected by peripheral. This can happen if the
                 // peripheral has been connected with a different device before
                 // we had a chance to delete our bonding info, which can only
