@@ -298,9 +298,9 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         PB_ARG_DEFAULT_INT(joystick_deadzone, 10)
         // Debug parameter to stay connected to the host on Technic Hub.
         // Works only on some hosts for the moment, so False by default.
-        #if PYBRICKS_HUB_TECHNICHUB
+        #if PYBRICKS_HUB_TECHNICHUB || PYBRICKS_HUB_PRIMEHUB
         , PB_ARG_DEFAULT_FALSE(stay_connected)
-        #endif // PYBRICKS_HUB_TECHNICHUB
+        #endif // PYBRICKS_HUB_TECHNICHUB || PYBRICKS_HUB_PRIMEHUB
         );
 
     #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
@@ -334,13 +334,14 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
 
     // By default, disconnect Technic Hub from host, as this is required for
     // most hosts. Stay connected only if the user explicitly requests it.
-    #if PYBRICKS_HUB_TECHNICHUB
+    // Added disconnection logic to Prime Hub as bluetooth crash workaround
+    #if PYBRICKS_HUB_TECHNICHUB || PYBRICKS_HUB_PRIMEHUB
     if (!mp_obj_is_true(stay_connected_in) && pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PYBRICKS)) {
         options |= PBDRV_BLUETOOTH_PERIPHERAL_OPTIONS_DISCONNECT_HOST;
         mp_printf(&mp_plat_print, "The hub may disconnect from the computer for better connectivity with the controller.\n");
         mp_hal_delay_ms(500);
     }
-    #endif // PYBRICKS_HUB_TECHNICHUB
+    #endif // PYBRICKS_HUB_TECHNICHUB || PYBRICKS_HUB_PRIMEHUB
 
     // Get stored address of controller to connect to
     uint8_t initial_stored_addr[6] = {0};

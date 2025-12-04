@@ -10,6 +10,7 @@
 - Prevented bluetooth button on Prime hub from disabling bluetooth
 - Disabled left/right buttons on Prime hub
 - Swapped button behavior for more consistent behavior when connected to bluetooth and no program is running: now short press shuts down and long press attempts to run program
+- Make Prime hub disconnect from computer when program runs, just like Technic hub. Not ideal, but was the only fix found for issue of bluetooth freezes. Can be reproduced by entering bluetooth mode, connecting hub to computer, pressing play to load program with Xbox controller support onto hub, connecting controller, turning off hub, then repeating steps. Eventually when pressing the bluetooth button on the IDE, the button wheel will appear forever, forcing a browser refresh. After refreshing and repeating the process, bt will connect but after loading the program and connecting the controller, this error will appear "Traceback (most recent call last): File "my_file.py", line 5, in <module> RuntimeError: Unknown error" where line number is the line with XboxController(). The issue will persist until you turn the hub off and on, and (if not using autostart) click the bt button in the IDE to disconnect the hub from the computer.
 
 ### Fixed
 
