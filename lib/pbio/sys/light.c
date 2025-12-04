@@ -306,7 +306,12 @@ static void pbsys_status_light_handle_status_change(void) {
 
     // BLE pattern precedence.
     pbsys_status_light_indication_ble_t ble_indication = PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_NONE;
-    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING)) {
+    if (
+        #if PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
+        pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) ||
+        #endif
+        pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING)
+    ) {
         ble_indication = PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_ADVERTISING;
     } else if (pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_HOST_CONNECTED)
                #if !PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
