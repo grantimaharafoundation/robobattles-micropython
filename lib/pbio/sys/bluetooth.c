@@ -310,9 +310,6 @@ PROCESS_THREAD(pbsys_bluetooth_process, ev, data) {
         pbdrv_bluetooth_power_on(true);
         PROCESS_WAIT_UNTIL(pbdrv_bluetooth_is_ready());
 
-        etimer_set(&timer, 1000);
-        PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER && etimer_expired(&timer));
-
         // Start advertising, and show visual indicator on status light.
         pbdrv_bluetooth_start_advertising();
         pbsys_status_set(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING);
