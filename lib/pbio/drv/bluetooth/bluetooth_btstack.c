@@ -771,6 +771,13 @@ static PT_THREAD(peripheral_scan_and_connect_task(struct pt *pt, pbio_task_t *ta
 
     peri->con_handle = HCI_CON_HANDLE_INVALID;
 
+    // Optionally, disconnect from host (usually Pybricks Code).
+    if (pybricks_con_handle != HCI_CON_HANDLE_INVALID &&
+        (peri->options & PBDRV_BLUETOOTH_PERIPHERAL_OPTIONS_DISCONNECT_HOST)) {
+        gap_disconnect(pybricks_con_handle);
+        PT_WAIT_UNTIL(pt, pybricks_con_handle == HCI_CON_HANDLE_INVALID);
+    }
+
     // active scanning to get scan response data.
     // scan interval: 48 * 0.625ms = 30ms
     gap_set_scan_params(1, 0x30, 0x30, 0);

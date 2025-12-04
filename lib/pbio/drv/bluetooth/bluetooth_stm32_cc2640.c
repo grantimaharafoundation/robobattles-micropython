@@ -668,6 +668,11 @@ try_again:
 
     peri->status = read_buf[8]; // debug
 
+    if (peri->status != bleSUCCESS) {
+        task->status = ble_error_to_pbio_error(peri->status);
+        goto out;
+    }
+
     PT_WAIT_UNTIL(pt, ({
         if (task->cancel) {
             connection_error = PBIO_ERROR_CANCELED;
