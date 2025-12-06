@@ -583,6 +583,11 @@ pbio_error_t pbio_servo_stop(pbio_servo_t *srv, pbio_control_on_completion_t on_
         pbio_control_state_t state;
         err = pbio_servo_get_state_control(srv, &state);
         if (err != PBIO_SUCCESS) {
+            // If device is disconnected or not ready, do nothing, but don't raise an error.
+            // This allows the script to continue and try again later.
+            if (err == PBIO_ERROR_NO_DEV || err == PBIO_ERROR_AGAIN) {
+                return PBIO_SUCCESS;
+            }
             return err;
         }
 
