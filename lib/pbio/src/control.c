@@ -356,8 +356,16 @@ void pbio_control_update(
         (pbio_control_on_completion_is_passive_smart(ctl->on_completion) &&
          !pbio_control_settings_time_is_later(ref->time, ref_end.time + ctl->settings.smart_passive_hold_time))) {
         // Keep actuating, so apply calculated PID torque value.
-        *actuation = PBIO_DCMOTOR_ACTUATION_TORQUE;
-        *control = torque;
+
+        // If we are holding and complete, relax to prevent noise.
+        if (ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD &&
+            pbio_control_status_test(ctl, PBIO_CONTROL_STATUS_COMPLETE)) {
+            *actuation = PBIO_DCMOTOR_ACTUATION_BRAKE;
+            *control = 0;
+        } else {
+            *actuation = PBIO_DCMOTOR_ACTUATION_TORQUE;
+            *control = torque;
+        }
     } else {
         // No more control is needed, so switch to passive mode.
         *actuation = pbio_control_passive_completion_to_actuation_type(ctl->on_completion);
