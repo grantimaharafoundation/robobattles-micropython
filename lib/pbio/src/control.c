@@ -256,6 +256,19 @@ void pbio_control_update(
     int32_t position_error = pbio_angle_diff_mdeg(&ref->position, &state->position);
     int32_t speed_error = ref->speed - state->speed_estimate;
 
+    // Smart Hold Deadzone:
+    // If holding, ignore errors within tolerance to prevent noise.
+    if (ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD) {
+        int32_t dz = ctl->settings.position_tolerance;
+        if (position_error > dz) {
+            position_error -= dz;
+        } else if (position_error < -dz) {
+            position_error += dz;
+        } else {
+            position_error = 0;
+        }
+    }
+
     // Calculate integral control errors, depending on control type.
     int32_t integral_error;
     int32_t position_error_used;
@@ -357,36 +370,9 @@ void pbio_control_update(
          !pbio_control_settings_time_is_later(ref->time, ref_end.time + ctl->settings.smart_passive_hold_time))) {
         // Keep actuating, so apply calculated PID torque value.
 
-        // Smart Hold with Hysteresis
-        if (ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD) {
-            // 1 << 2 is a custom flag to track if we are in the relaxed state.
-            bool was_relaxed = ctl->status & (1 << 2);
-            bool complete = pbio_control_status_test(ctl, PBIO_CONTROL_STATUS_COMPLETE);
-
-            // Allow 2x tolerance if we are already relaxed, to prevent clicking.
-            int32_t tolerance = ctl->settings.position_tolerance;
-            if (was_relaxed) {
-                tolerance *= 2;
-            }
-
-            int32_t remaining = pbio_angle_diff_mdeg(&ref_end.position, &state->position);
-            bool within_tolerance = pbio_int_math_abs(remaining) <= tolerance;
-            bool speed_ok = pbio_int_math_abs(state->speed) <= ctl->settings.speed_tolerance;
-
-            // Relax if complete, or if we were relaxed and still within hysteresis limits.
-            if (complete || (was_relaxed && within_tolerance && speed_ok)) {
-                *actuation = PBIO_DCMOTOR_ACTUATION_BRAKE;
-                *control = 0;
-                ctl->status |= (1 << 2);
-            } else {
-                *actuation = PBIO_DCMOTOR_ACTUATION_TORQUE;
-                *control = torque;
-                ctl->status &= ~(1 << 2);
-            }
-        } else {
-            *actuation = PBIO_DCMOTOR_ACTUATION_TORQUE;
-            *control = torque;
-        }
+        // Keep actuating, so apply calculated PID torque value.
+        *actuation = PBIO_DCMOTOR_ACTUATION_TORQUE;
+        *control = torque;
     } else {
         // No more control is needed, so switch to passive mode.
         *actuation = pbio_control_passive_completion_to_actuation_type(ctl->on_completion);
