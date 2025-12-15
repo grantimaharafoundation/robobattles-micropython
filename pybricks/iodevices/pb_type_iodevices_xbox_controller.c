@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <pbdrv/bluetooth.h>
 #include <pbio/button.h>
@@ -497,8 +498,8 @@ static mp_obj_t pb_xbox_joystick(mp_obj_t self_in, uint16_t x_raw, uint16_t y_ra
     mp_int_t y = (INT16_MAX - y_raw) * 100 / INT16_MAX;
 
     // Apply square deadzone to prevent drift + rescaling per axis
-    x = apply_deadzone(x, deadzone);
-    y = apply_deadzone(y, deadzone);
+    x = apply_deadzone(x, self->joystick_deadzone);
+    y = apply_deadzone(y, self->joystick_deadzone);
 
     mp_obj_t directions[] = {
         mp_obj_new_int(x),
