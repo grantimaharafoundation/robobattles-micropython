@@ -146,7 +146,7 @@ static bool pbio_control_check_completion(const pbio_control_t *ctl, uint32_t ti
     // If we were already complete, use a larger tolerance (hysteresis) to avoid rapid switching.
     int32_t tolerance = ctl->settings.position_tolerance;
     if (was_complete) {
-        tolerance *= 2;
+        tolerance *= 4;
     }
     return pbio_int_math_abs(position_remaining) <= tolerance;
 }
