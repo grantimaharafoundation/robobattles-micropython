@@ -357,11 +357,32 @@ void pbio_control_update(
          !pbio_control_settings_time_is_later(ref->time, ref_end.time + ctl->settings.smart_passive_hold_time))) {
         // Keep actuating, so apply calculated PID torque value.
 
-        // If we are holding and complete, relax to prevent noise.
-        if (ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD &&
-            pbio_control_status_test(ctl, PBIO_CONTROL_STATUS_COMPLETE)) {
-            *actuation = PBIO_DCMOTOR_ACTUATION_BRAKE;
-            *control = 0;
+        // Smart Hold with Hysteresis
+        if (ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD) {
+            // 1 << 2 is a custom flag to track if we are in the relaxed state.
+            bool was_relaxed = ctl->status & (1 << 2);
+            bool complete = pbio_control_status_test(ctl, PBIO_CONTROL_STATUS_COMPLETE);
+
+            // Allow 2x tolerance if we are already relaxed, to prevent clicking.
+            int32_t tolerance = ctl->settings.position_tolerance;
+            if (was_relaxed) {
+                tolerance *= 2;
+            }
+
+            int32_t remaining = pbio_angle_diff_mdeg(&ref_end.position, &state->position);
+            bool within_tolerance = pbio_int_math_abs(remaining) <= tolerance;
+            bool speed_ok = pbio_int_math_abs(state->speed) <= ctl->settings.speed_tolerance;
+
+            // Relax if complete, or if we were relaxed and still within hysteresis limits.
+            if (complete || (was_relaxed && within_tolerance && speed_ok)) {
+                *actuation = PBIO_DCMOTOR_ACTUATION_BRAKE;
+                *control = 0;
+                ctl->status |= (1 << 2);
+            } else {
+                *actuation = PBIO_DCMOTOR_ACTUATION_TORQUE;
+                *control = torque;
+                ctl->status &= ~(1 << 2);
+            }
         } else {
             *actuation = PBIO_DCMOTOR_ACTUATION_TORQUE;
             *control = torque;
@@ -470,6 +491,9 @@ static void pbio_control_set_control_type(pbio_control_t *ctl, uint32_t time_now
     // Reset stall state. It will get the correct value during the next control
     // update. REVISIT: Evaluate it here.
     pbio_control_status_set(ctl, PBIO_CONTROL_STATUS_STALLED, false);
+
+    // Reset smart hold relaxed state.
+    ctl->status &= ~(1 << 2);
 
     // Reset integrator for new control type.
     if ((type & PBIO_CONTROL_TYPE_MASK) == PBIO_CONTROL_TYPE_POSITION) {
