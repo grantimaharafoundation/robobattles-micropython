@@ -592,13 +592,29 @@ pbio_error_t pbio_servo_stop(pbio_servo_t *srv, pbio_control_on_completion_t on_
         }
 
         // To hold, we first have to figure out which angle to hold.
+        //
+        // For position based commands, we want to keep holding the current
+        // trajectory target, so the motor will continue to converge to the
+        // intended endpoint.
+        //
+        // For timed/speed based commands, the trajectory reference position is
+        // mostly an internal bookkeeping value and it may not match the
+        // measured angle exactly (e.g. due to observer error or integrator
+        // pausing). Holding the reference in that case can cause a persistent
+        // small position error, which makes the motor hunt/whine in detents.
+        // So for timed control, we hold the measured angle instead.
         const pbio_angle_t *hold_target;
         pbio_trajectory_reference_t ref;
         if (pbio_control_is_active(&srv->control)) {
-            // If control is active, hold at current target, so get it.
-            uint32_t time = pbio_control_get_time_ticks();
-            pbio_control_get_reference(&srv->control, time, &state, &ref);
-            hold_target = &ref.position;
+            if (pbio_control_type_is_time(&srv->control)) {
+                // Freeze at current measured angle.
+                hold_target = &state.position;
+            } else {
+                // If position control is active, hold at current target.
+                uint32_t time = pbio_control_get_time_ticks();
+                pbio_control_get_reference(&srv->control, time, &state, &ref);
+                hold_target = &ref.position;
+            }
         } else {
             // If no control is ongoing, just hold measured state.
             hold_target = &state.position;
