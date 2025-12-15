@@ -90,7 +90,7 @@ static bool pbio_control_status_test(const pbio_control_t *ctl, pbio_control_sta
     return ctl->status & flag;
 }
 
-static bool pbio_control_check_completion(const pbio_control_t *ctl, uint32_t time, const pbio_control_state_t *state, const pbio_trajectory_reference_t *end) {
+static bool pbio_control_check_completion(const pbio_control_t *ctl, uint32_t time, const pbio_control_state_t *state, const pbio_trajectory_reference_t *end, bool was_complete) {
 
     // If no control is active, then all targets are complete.
     if (!pbio_control_is_active(ctl)) {
@@ -143,7 +143,12 @@ static bool pbio_control_check_completion(const pbio_control_t *ctl, uint32_t ti
 
     // Once we stand still, we're complete if the distance to the
     // target is equal to or less than the allowed tolerance.
-    return pbio_int_math_abs(position_remaining) <= ctl->settings.position_tolerance;
+    // If we were already complete, use a larger tolerance (hysteresis) to avoid rapid switching.
+    int32_t tolerance = ctl->settings.position_tolerance;
+    if (was_complete) {
+        tolerance *= 2;
+    }
+    return pbio_int_math_abs(position_remaining) <= tolerance;
 }
 
 /**
@@ -338,8 +343,9 @@ void pbio_control_update(
         pbio_speed_integrator_stalled(&ctl->speed_integrator, time_now, state->speed, ref->speed));
 
     // Check if we are on target, and set the status.
+    bool was_complete = pbio_control_status_test(ctl, PBIO_CONTROL_STATUS_COMPLETE);
     pbio_control_status_set(ctl, PBIO_CONTROL_STATUS_COMPLETE,
-        pbio_control_check_completion(ctl, ref->time, state, &ref_end));
+        pbio_control_check_completion(ctl, ref->time, state, &ref_end, was_complete));
 
     // Save (low-pass filtered) load for diagnostics
     ctl->pid_average = (ctl->pid_average * (100 - PBIO_CONFIG_CONTROL_LOOP_TIME_MS) + torque * PBIO_CONFIG_CONTROL_LOOP_TIME_MS) / 100;
