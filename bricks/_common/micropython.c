@@ -350,7 +350,18 @@ pbio_error_t pbsys_main_program_validate(pbsys_main_program_t *program) {
 
     // If requesting a user program, ensure that it exists and is valid.
     uint32_t program_size = program->code_end - program->code_start;
-    if (program_size == 0 || program_size > pbsys_storage_get_maximum_program_size()) {
+    if (program_size > pbsys_storage_get_maximum_program_size()) {
+        return PBIO_ERROR_NOT_SUPPORTED;
+    }
+
+    if (program_size == 0) {
+        #if MICROPY_MODULE_FROZEN_MPY
+        void *modref;
+        int frozen_type;
+        if (mp_find_frozen_module("_xbox_pairing.py", &frozen_type, &modref) == MP_IMPORT_STAT_FILE) {
+            return PBIO_SUCCESS;
+        }
+        #endif
         return PBIO_ERROR_NOT_SUPPORTED;
     }
 
