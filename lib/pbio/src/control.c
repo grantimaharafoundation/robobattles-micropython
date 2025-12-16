@@ -277,11 +277,26 @@ void pbio_control_update(
         // To avoid introducing hysteresis while still letting the motor
         // converge under load, we allow integration during hold by ensuring
         // the target_error magnitude is at least the integral deadzone.
+        //
+        // However, always doing this can create a small limit-cycle when the
+        // motor is otherwise unloaded (audible whining that comes/goes). So we
+        // only enable this more aggressive behavior when the controller is
+        // seeing significant load.
+        bool is_hold = ref->speed == 0 && ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD;
+        int32_t hold_load_threshold = ctl->settings.actuation_max / 50; // ~2% of max torque
+        bool is_hold_loaded = is_hold && pbio_int_math_abs(ctl->pid_average) > hold_load_threshold;
+
         int32_t target_error_for_integrator = target_error;
-        if (ref->speed == 0 && ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD) {
+        if (is_hold_loaded) {
             int32_t abs_target_error = pbio_int_math_abs(target_error_for_integrator);
             if (abs_target_error < ctl->settings.integral_deadzone) {
-                target_error_for_integrator = pbio_int_math_sign(target_error_for_integrator) * ctl->settings.integral_deadzone;
+                int32_t s = pbio_int_math_sign(target_error_for_integrator);
+                if (s == 0) {
+                    s = pbio_int_math_sign(position_error);
+                }
+                if (s != 0) {
+                    target_error_for_integrator = s * ctl->settings.integral_deadzone;
+                }
             }
         }
 
@@ -306,7 +321,14 @@ void pbio_control_update(
     // it spends buzzing/hunting before correcting an offset under load.
     int32_t pid_kp;
     if (ref->speed == 0 && ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD) {
-        pid_kp = ctl->settings.pid_kp;
+        // Use full kp only when holding under load; otherwise use normal
+        // gain scheduling to reduce audible hunting when unloaded.
+        int32_t hold_load_threshold = ctl->settings.actuation_max / 50; // ~2% of max torque
+        if (pbio_int_math_abs(ctl->pid_average) > hold_load_threshold) {
+            pid_kp = ctl->settings.pid_kp;
+        } else {
+            pid_kp = pbio_control_get_pid_kp(&ctl->settings, position_error, target_error, pbio_trajectory_get_abs_command_speed(&ctl->trajectory));
+        }
     } else {
         pid_kp = pbio_control_get_pid_kp(&ctl->settings, position_error, target_error, pbio_trajectory_get_abs_command_speed(&ctl->trajectory));
     }
