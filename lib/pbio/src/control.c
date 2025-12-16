@@ -263,8 +263,30 @@ void pbio_control_update(
     if (pbio_control_type_is_position(ctl)) {
         // Get error to final position, used below to adjust controls near end.
         target_error = pbio_angle_diff_mdeg(&ref_end.position, &state->position);
+
+        // During hold, the reference trajectory is constant (speed=0), so the
+        // "final target" equals the current target and target_error equals
+        // position_error. In that situation, we generally *do* want integral
+        // action to eliminate steady-state offsets under load.
+        //
+        // But the position integrator normally avoids integrating within a
+        // deadzone near the target to reduce noise and hunting. That deadzone
+        // can also allow a small permanent offset to persist (and sometimes
+        // cause buzzing in detents).
+        //
+        // To avoid introducing hysteresis while still letting the motor
+        // converge under load, we allow integration during hold by ensuring
+        // the target_error magnitude is at least the integral deadzone.
+        int32_t target_error_for_integrator = target_error;
+        if (ref->speed == 0 && ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD) {
+            int32_t abs_target_error = pbio_int_math_abs(target_error_for_integrator);
+            if (abs_target_error < ctl->settings.integral_deadzone) {
+                target_error_for_integrator = pbio_int_math_sign(target_error_for_integrator) * ctl->settings.integral_deadzone;
+            }
+        }
+
         // Update count integral error and get current error state
-        integral_error = pbio_position_integrator_update(&ctl->position_integrator, position_error, target_error);
+        integral_error = pbio_position_integrator_update(&ctl->position_integrator, position_error, target_error_for_integrator);
         // For position control, the proportional term is the real position error.
         position_error_used = position_error;
     } else {
