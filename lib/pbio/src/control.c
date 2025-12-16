@@ -299,7 +299,17 @@ void pbio_control_update(
     }
 
     // Corresponding PID control signal
-    int32_t pid_kp = pbio_control_get_pid_kp(&ctl->settings, position_error, target_error, pbio_trajectory_get_abs_command_speed(&ctl->trajectory));
+    //
+    // During HOLD, we prefer using the full proportional gain. The low-speed
+    // reduced-kp schedule is primarily meant to smooth *slow motion*, but when
+    // holding position it can make the controller too soft, increasing the time
+    // it spends buzzing/hunting before correcting an offset under load.
+    int32_t pid_kp;
+    if (ref->speed == 0 && ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD) {
+        pid_kp = ctl->settings.pid_kp;
+    } else {
+        pid_kp = pbio_control_get_pid_kp(&ctl->settings, position_error, target_error, pbio_trajectory_get_abs_command_speed(&ctl->trajectory));
+    }
     int32_t torque_proportional = pbio_control_settings_mul_by_gain(position_error_used, pid_kp);
     int32_t torque_derivative = pbio_control_settings_mul_by_gain(speed_error, ctl->settings.pid_kd);
     int32_t torque_integral = pbio_control_settings_mul_by_gain(integral_error, ctl->settings.pid_ki);
