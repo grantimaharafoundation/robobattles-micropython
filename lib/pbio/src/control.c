@@ -283,7 +283,7 @@ void pbio_control_update(
         // only enable this more aggressive behavior when the controller is
         // seeing significant load.
         bool is_hold = ref->speed == 0 && ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD;
-        int32_t hold_load_threshold = ctl->settings.actuation_max / 50; // ~2% of max torque
+        int32_t hold_load_threshold = ctl->settings.actuation_max / 20; // ~5% of max torque
         bool is_hold_loaded = is_hold && pbio_int_math_abs(ctl->pid_average) > hold_load_threshold;
 
         int32_t target_error_for_integrator = target_error;
@@ -323,7 +323,7 @@ void pbio_control_update(
     if (ref->speed == 0 && ctl->on_completion == PBIO_CONTROL_ON_COMPLETION_HOLD) {
         // Use full kp only when holding under load; otherwise use normal
         // gain scheduling to reduce audible hunting when unloaded.
-        int32_t hold_load_threshold = ctl->settings.actuation_max / 50; // ~2% of max torque
+        int32_t hold_load_threshold = ctl->settings.actuation_max / 20; // ~5% of max torque
         if (pbio_int_math_abs(ctl->pid_average) > hold_load_threshold) {
             pid_kp = ctl->settings.pid_kp;
         } else {
@@ -742,6 +742,10 @@ pbio_error_t pbio_control_start_position_control_hold(pbio_control_t *ctl, uint3
 
     // Activate control type and reset integrators if needed.
     pbio_control_set_control_type(ctl, time_now, PBIO_CONTROL_TYPE_POSITION, PBIO_CONTROL_ON_COMPLETION_HOLD);
+
+    // Reset load estimate so HOLD doesn't inherit a previous maneuver's load,
+    // which could otherwise enable aggressive hold behavior even when unloaded.
+    ctl->pid_average = 0;
 
     return PBIO_SUCCESS;
 }
