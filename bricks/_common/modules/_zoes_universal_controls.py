@@ -20,6 +20,7 @@ def apply_deadzone(value):
     scaled = (abs(value) - deadzone) / (1 - deadzone / 100)
     return scaled * sign
 
+
 # Run program loop
 while True:
     # Get input and apply deadzone math
@@ -27,7 +28,7 @@ while True:
     compY = apply_deadzone(controller.joystick_left()[1])
     compWL = apply_deadzone(controller.triggers()[0])
     compWR = apply_deadzone(controller.triggers()[1])
-    
+
     # Reduce left/right input for slower turning to make bot easier to control
     compX /= 3
 
@@ -43,4 +44,3 @@ while True:
         # Joystick is not pressed, so let wheel motors spin freely to save power
         left.stop()
         right.stop()
-    
