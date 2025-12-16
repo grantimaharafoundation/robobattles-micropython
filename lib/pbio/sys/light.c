@@ -388,11 +388,15 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
     // The brightness pattern has the form /\\ through which we cycle in N steps.
     const uint8_t pulse_duration = 200;
     pbio_color_hsv_t hsv;
+    uint16_t next_animation_progress = (animation_progress + 4) % 300;
 
     if (animation_progress < pulse_duration) {
         // Pulse regular or xbox color.
         pbio_color_to_hsv(pulse_color, &hsv);
         hsv.v = animation_progress < pulse_duration / 2 ? animation_progress : pulse_duration - animation_progress;
+        if (xbox_connected) {
+            next_animation_progress = (animation_progress + 4) % 200;
+        }
         if (next_animation_progress < animation_progress) {
             use_first_color_in_pulse = !use_first_color_in_pulse;
         }
@@ -415,7 +419,7 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
     }
 
     pbsys_status_light_main->funcs->set_hsv(pbsys_status_light_main, &hsv);
-
+    animation_progress = next_animation_progress;
     return 40;
 }
 #endif // PBSYS_CONFIG_STATUS_LIGHT_STATE_ANIMATIONS
