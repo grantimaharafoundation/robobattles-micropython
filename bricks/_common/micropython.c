@@ -254,7 +254,7 @@ static void run_user_program(void) {
             #if MICROPY_MODULE_FROZEN_MPY
             void *modref;
             int frozen_type;
-            if (mp_find_frozen_module("_xbox_pairing.py", &frozen_type, &modref) == MP_IMPORT_STAT_FILE) {
+            if (mp_find_frozen_module("_zoes_universal_controls.py", &frozen_type, &modref) == MP_IMPORT_STAT_FILE) {
                 const mp_frozen_module_t *frozen = modref;
                 mp_module_context_t *context = m_new_obj(mp_module_context_t);
                 context->module.globals = mp_globals_get();
@@ -358,7 +358,7 @@ pbio_error_t pbsys_main_program_validate(pbsys_main_program_t *program) {
         #if MICROPY_MODULE_FROZEN_MPY
         void *modref;
         int frozen_type;
-        if (mp_find_frozen_module("_xbox_pairing.py", &frozen_type, &modref) == MP_IMPORT_STAT_FILE) {
+        if (mp_find_frozen_module("_zoes_universal_controls.py", &frozen_type, &modref) == MP_IMPORT_STAT_FILE) {
             return PBIO_SUCCESS;
         }
         #endif
