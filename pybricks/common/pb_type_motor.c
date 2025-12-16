@@ -266,11 +266,18 @@ static mp_obj_t pb_type_Motor_go(size_t n_args, const mp_obj_t *pos_args, mp_map
     // Clamp the speed percentage to the -100 to 100 range.
     speed_pct = pbio_int_math_bind(speed_pct, -100, 100);
 
-    /*if (speed_pct > -1 && speed_pct < 1) {
-        pb_assert(pbio_servo_stop(self->srv, PBIO_CONTROL_ON_COMPLETION_HOLD));
+    if (speed_pct > -1 && speed_pct < 1) {
+        // Stop and hold at current angle to avoid windup.
+        int32_t angle, speed;
+        pbio_error_t err = pbio_servo_get_state_user(self->srv, &angle, &speed);
+        if (err == PBIO_SUCCESS) {
+            pb_assert(pbio_servo_track_target(self->srv, angle));
+        } else {
+            pb_assert(pbio_servo_stop(self->srv, PBIO_CONTROL_ON_COMPLETION_HOLD));
+        }
         pb_type_awaitable_update_all(self->device_base.awaitables, PB_TYPE_AWAITABLE_OPT_CANCEL_ALL);
         return mp_const_none;
-    }*/
+    }
 
     // Get the motor's maximum speed.
     int32_t max_speed;
