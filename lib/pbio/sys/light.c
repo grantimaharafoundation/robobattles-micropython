@@ -18,6 +18,7 @@
 #include <pbio/util.h>
 #include <pbsys/config.h>
 #include <pbsys/status.h>
+#include <pbsys/storage.h>
 
 #include "../src/light/color_light.h"
 
@@ -121,6 +122,19 @@ static pbsys_status_light_indication_pattern_element_t
     { .color = PBIO_COLOR_BLACK, .duration = 5 },
     { .color = PBIO_COLOR_BLUE, .duration = 3 },
     { .color = PBIO_COLOR_BLACK, .duration = 12 },
+    // Extra space for Xbox status flashes
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
+    { .color = PBIO_COLOR_NONE, .duration = 0 },
     PBSYS_STATUS_LIGHT_INDICATION_PATTERN_REPEAT
 };
 
@@ -350,25 +364,50 @@ static uint8_t find_color_index(const char *name_to_find) {
 }
 
 #if PBSYS_CONFIG_STATUS_LIGHT_STATE_ANIMATIONS
-static uint8_t animation_progress;
+static uint16_t animation_progress;
 static bool use_first_color_in_pulse = true;
 
 static uint32_t default_user_program_light_animation_next(pbio_light_animation_t *animation) {
-    // The brightness pattern has the form /\ through which we cycle in N steps.
-    // It is reset back to the start when the user program starts.
-    const uint8_t animation_progress_max = 200;
-    pbio_color_hsv_t hsv; // Target HSV for the LED driver
 
-    uint8_t current_color_index = use_first_color_in_pulse ? selected_hub_color_index_1 : selected_hub_color_index_2;
-    pbio_color_t current_pb_color = hub_color_configs[current_color_index].color;
+    // Check for Xbox controller connection.
+    bool xbox_connected = pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL);
+    if (xbox_connected) {
+        animation_progress = (animation_progress + 4) % 200;
+    } else {
+        animation_progress = (animation_progress + 4) % 300;
+    }
 
-    // Convert the configured pbio_color_t to HSV
-    pbio_color_to_hsv(current_pb_color, &hsv);
+    // Set pulsing color based on Xbox connection status.
+    pbio_color_t pulse_color;
+    if (xbox_connected) {
+        pulse_color = PBIO_COLOR_GREEN;
+    } else {
+        pulse_color = hub_color_configs[use_first_color_in_pulse ? selected_hub_color_index_1 : selected_hub_color_index_2].color;
+    }
 
-    // Override the V (brightness) component with the animation
-    hsv.v = animation_progress < animation_progress_max / 2 ?
-        animation_progress :
-        animation_progress_max - animation_progress;
+    // The brightness pattern has the form /\\ through which we cycle in N steps.
+    const uint8_t pulse_duration = 200;
+    pbio_color_hsv_t hsv;
+
+    if (animation_progress < pulse_duration) {
+        // Pulse regular or xbox color.
+        pbio_color_to_hsv(pulse_color, &hsv);
+        hsv.v = animation_progress < pulse_duration / 2 ? animation_progress : pulse_duration - animation_progress;
+        if (next_animation_progress < animation_progress) {
+            use_first_color_in_pulse = !use_first_color_in_pulse;
+        }
+    } else {
+        // From 200-300, do fast blips for pairing info.
+        pbio_color_t flash_color;
+        uint8_t *button_data;
+        if (pbsys_storage_get_user_data(0, &button_data, 6) == PBIO_SUCCESS && button_data[0] != 0) {
+            flash_color = PBIO_COLOR_YELLOW; // Paired before, waiting.
+        } else {
+            flash_color = PBIO_COLOR_RED; // Never paired.
+        }
+        pbio_color_to_hsv(flash_color, &hsv);
+        hsv.v = animation_progress % 20 < 10 ? 0 : 100;
+    }
 
     // At low brightness some colors look like others
     if (hsv.v < 20) {
@@ -376,15 +415,6 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
     }
 
     pbsys_status_light_main->funcs->set_hsv(pbsys_status_light_main, &hsv);
-
-    // This increment controls the speed of the pattern and wraps on completion
-    uint8_t next_animation_progress = (animation_progress + 4) % animation_progress_max;
-
-    // If animation wrapped around, toggle the color
-    if (next_animation_progress < animation_progress) { // Check for wrap-around
-        use_first_color_in_pulse = !use_first_color_in_pulse;
-    }
-    animation_progress = next_animation_progress;
 
     return 40;
 }
@@ -539,6 +569,43 @@ void pbsys_status_light_poll(void) {
     // the status light.
     pbsys_status_light_instance_main.allow_user_update =
         new_main_color == PBIO_COLOR_NONE && pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING);
+
+    #if PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
+    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+        // User program is running, implement custom Xbox light sequence.
+        bool xbox_connected = pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL);
+        if (xbox_connected) {
+            // Green pulse.
+            pbsys_ble_advertising_pattern_elements[0] = (pbsys_status_light_indication_pattern_element_t){ .color = PBIO_COLOR_GREEN, .duration = 3 };
+            pbsys_ble_advertising_pattern_elements[1] = (pbsys_status_light_indication_pattern_element_t){ .color = PBIO_COLOR_BLACK, .duration = 5 };
+            pbsys_ble_advertising_pattern_elements[2] = (pbsys_status_light_indication_pattern_element_t){ .color = PBIO_COLOR_GREEN, .duration = 3 };
+            pbsys_ble_advertising_pattern_elements[3] = (pbsys_status_light_indication_pattern_element_t){ .color = PBIO_COLOR_BLACK, .duration = 12 };
+            // Clear rest of pattern.
+            for (int i = 4; i < 16; i++) {
+                pbsys_ble_advertising_pattern_elements[i] = (pbsys_status_light_indication_pattern_element_t){ .color = PBIO_COLOR_NONE, .duration = 0 };
+            }
+        } else {
+            // Hub color pulse.
+            pbsys_ble_advertising_pattern_elements[0] = (pbsys_status_light_indication_pattern_element_t){ .color = hub_color_configs[selected_hub_color_index_1].color, .duration = 3 };
+            pbsys_ble_advertising_pattern_elements[1] = (pbsys_status_light_indication_pattern_element_t){ .color = PBIO_COLOR_BLACK, .duration = 5 };
+            pbsys_ble_advertising_pattern_elements[2] = (pbsys_status_light_indication_pattern_element_t){ .color = hub_color_configs[selected_hub_color_index_2].color, .duration = 3 };
+            pbsys_ble_advertising_pattern_elements[3] = (pbsys_status_light_indication_pattern_element_t){ .color = PBIO_COLOR_BLACK, .duration = 12 };
+
+            // Pairing status flashes.
+            pbio_color_t flash_color;
+            uint8_t *button_data;
+            if (pbsys_storage_get_user_data(0, &button_data, 6) == PBIO_SUCCESS && button_data[0] != 0) {
+                flash_color = PBIO_COLOR_YELLOW; // Paired before, waiting.
+            } else {
+                flash_color = PBIO_COLOR_RED; // Never paired.
+            }
+            for (int i = 4; i < 14; i += 2) {
+                pbsys_ble_advertising_pattern_elements[i] = (pbsys_status_light_indication_pattern_element_t){ .color = flash_color, .duration = 2 };
+                pbsys_ble_advertising_pattern_elements[i + 1] = (pbsys_status_light_indication_pattern_element_t){ .color = PBIO_COLOR_BLACK, .duration = 2 };
+            }
+        }
+    }
+    #endif
 
     pbsys_status_light_set_pattern_or_user_color(&pbsys_status_light_instance_main, new_main_color);
     #if PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
