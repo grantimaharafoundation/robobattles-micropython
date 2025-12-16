@@ -33,13 +33,13 @@ while True:
     compX /= 3
 
     # Control weapon motors
-    weapon.go(compWL - compWR) 
+    weapon.go(compWL - compWR)
 
     # Control wheel motors
     if compX != 0 or compY != 0:
         # Joystick is pressed, so move wheel motors
         left.go(-compY - compX)
-        right.go(compY - compX)    
+        right.go(compY - compX)
     else:
         # Joystick is not pressed, so let wheel motors spin freely to save power
         left.stop()
