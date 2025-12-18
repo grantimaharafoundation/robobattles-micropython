@@ -325,11 +325,6 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
     // behavior
     mp_hal_stdout_tx_flush();
 
-    // needed to ensure that no buttons are "pressed" after reconnecting since
-    // we are using static memory
-    memset(&xbox->state, 0, sizeof(xbox_input_map_t));
-    xbox->state.x = xbox->state.y = xbox->state.z = xbox->state.rz = INT16_MAX;
-
     // Xbox Controller requires pairing.
     pbdrv_bluetooth_peripheral_options_t options = PBDRV_BLUETOOTH_PERIPHERAL_OPTIONS_PAIR;
 
@@ -361,56 +356,86 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         }
     }
 
-    // Connect with bonding enabled. On some computers, the pairing step will
-    // fail if the hub is still connected to Pybricks Code. Since it is unclear
-    // which computer will have this problem, recommend to disconnect the hub
-    // if this happens.
-    nlr_buf_t nlr;
-    if (nlr_push(&nlr) == 0) {
-        pbdrv_bluetooth_peripheral_scan_and_connect(
-            &xbox->task,
-            xbox_advertisement_matches,
-            xbox_advertisement_response_matches,
-            handle_notification,
-            options);
-        pb_module_tools_pbio_task_do_blocking(&xbox->task, -1);
-        nlr_pop();
-    } else {
-        if (xbox->task.status == PBIO_ERROR_INVALID_OP) {
-            mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT(
-                "Failed to pair. Disconnect the hub from the computer "
-                "and re-start the program with the green button on the hub\n."
-                ));
-        }
-        nlr_jump(nlr.ret_val);
-    }
-    DEBUG_PRINT("Connected to XBOX controller.\n");
+    while (true) {
+        // needed to ensure that no buttons are "pressed" after reconnecting since
+        // we are using static memory
+        memset(&xbox->state, 0, sizeof(xbox_input_map_t));
+        xbox->state.x = xbox->state.y = xbox->state.z = xbox->state.rz = INT16_MAX;
 
-    // If the controller was most recently connected to another device like the
-    // actual Xbox or a phone, the controller needs to be not just turned on,
-    // but also put into pairing mode before connecting to the hub. Otherwise,
-    // it will appear to connect and even bond, but return errors when trying
-    // to read the HID characteristics. So inform the user to press/hold the
-    // pair button to put it into the right mode.
-    if (nlr_push(&nlr) == 0) {
-        // It seems we need to read the (unused) map only once after pairing
-        // to make the controller active. We'll still read it every time to
-        // catch the case where user might not have done this at least once.
-        // Connecting takes about a second longer this way, but we can provide
-        // better error messages.
-        pb_xbox_discover_and_read(&pb_xbox_char_hid_map);
+        // Connect with bonding enabled. On some computers, the pairing step will
+        // fail if the hub is still connected to Pybricks Code. Since it is unclear
+        // which computer will have this problem, recommend to disconnect the hub
+        // if this happens.
+        nlr_buf_t nlr;
+        bool connect_success = false;
 
-        // This is the main characteristic that notifies us of button state.
-        pb_xbox_discover_and_read(&pb_xbox_char_hid_report);
-        nlr_pop();
-    } else {
-        if (xbox->task.status != PBIO_SUCCESS) {
-            mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT(
-                "Connected, but not allowed to read buttons. "
-                "Is the controller in pairing mode?"
-                ));
+        if (nlr_push(&nlr) == 0) {
+            pbdrv_bluetooth_peripheral_scan_and_connect(
+                &xbox->task,
+                xbox_advertisement_matches,
+                xbox_advertisement_response_matches,
+                handle_notification,
+                options);
+            pb_module_tools_pbio_task_do_blocking(&xbox->task, -1);
+            nlr_pop();
+            if (xbox->task.status == PBIO_SUCCESS) {
+                connect_success = true;
+            }
+        } else {
+            // If the user presses the stop button, we should stop the program.
+            mp_obj_t exc = MP_STATE_THREAD(active_exception);
+            if (!mp_obj_is_subclass_fast(MP_OBJ_FROM_PTR(mp_obj_get_type(exc)), MP_OBJ_FROM_PTR(&mp_type_OSError))) {
+                nlr_jump(nlr.ret_val);
+            }
         }
-        nlr_jump(nlr.ret_val);
+
+        if (connect_success) {
+            DEBUG_PRINT("Connected to XBOX controller.\n");
+
+            // If the controller was most recently connected to another device like the
+            // actual Xbox or a phone, the controller needs to be not just turned on,
+            // but also put into pairing mode before connecting to the hub. Otherwise,
+            // it will appear to connect and even bond, but return errors when trying
+            // to read the HID characteristics. So inform the user to press/hold the
+            // pair button to put it into the right mode.
+            bool discovery_success = false;
+
+            if (nlr_push(&nlr) == 0) {
+                // It seems we need to read the (unused) map only once after pairing
+                // to make the controller active. We'll still read it every time to
+                // catch the case where user might not have done this at least once.
+                // Connecting takes about a second longer this way, but we can provide
+                // better error messages.
+                pb_xbox_discover_and_read(&pb_xbox_char_hid_map);
+
+                // This is the main characteristic that notifies us of button state.
+                pb_xbox_discover_and_read(&pb_xbox_char_hid_report);
+                nlr_pop();
+                if (xbox->task.status == PBIO_SUCCESS) {
+                    discovery_success = true;
+                }
+            } else {
+                // If the user presses the stop button, we should stop the program.
+                mp_obj_t exc = MP_STATE_THREAD(active_exception);
+                if (!mp_obj_is_subclass_fast(MP_OBJ_FROM_PTR(mp_obj_get_type(exc)), MP_OBJ_FROM_PTR(&mp_type_OSError))) {
+                    nlr_jump(nlr.ret_val);
+                }
+            }
+
+            if (discovery_success) {
+                break;
+            }
+
+            // Connection failed, retrying...
+            mp_printf(&mp_plat_print, "Connection failed, retrying...\n");
+
+            // Disconnect to clean up
+            pbdrv_bluetooth_peripheral_disconnect(&xbox->task);
+            pb_module_tools_pbio_task_do_blocking(&xbox->task, -1);
+        } else {
+            mp_printf(&mp_plat_print, "Scanning for Xbox controller...\n");
+        }
+        mp_hal_delay_ms(200);
     }
 
     // Store the address of the successfully connected controller
