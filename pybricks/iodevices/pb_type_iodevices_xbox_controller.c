@@ -383,7 +383,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
             }
         } else {
             // If the user presses the stop button, we should stop the program.
-            mp_obj_t exc = MP_STATE_THREAD(active_exception);
+            mp_obj_t exc = (mp_obj_t)nlr.ret_val;
             if (!mp_obj_is_subclass_fast(MP_OBJ_FROM_PTR(mp_obj_get_type(exc)), MP_OBJ_FROM_PTR(&mp_type_OSError))) {
                 nlr_jump(nlr.ret_val);
             }
@@ -416,7 +416,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
                 }
             } else {
                 // If the user presses the stop button, we should stop the program.
-                mp_obj_t exc = MP_STATE_THREAD(active_exception);
+                mp_obj_t exc = (mp_obj_t)nlr.ret_val;
                 if (!mp_obj_is_subclass_fast(MP_OBJ_FROM_PTR(mp_obj_get_type(exc)), MP_OBJ_FROM_PTR(&mp_type_OSError))) {
                     nlr_jump(nlr.ret_val);
                 }
