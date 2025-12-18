@@ -377,45 +377,12 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
         animation_progress = (animation_progress + 4) % 300;
     }
 
-    // Set pulsing color based on Xbox connection status.
-    pbio_color_t pulse_color;
-    if (xbox_connected) {
-        pulse_color = PBIO_COLOR_GREEN;
-    } else {
-        pulse_color = hub_color_configs[use_first_color_in_pulse ? selected_hub_color_index_1 : selected_hub_color_index_2].color;
-    }
-
-    // The brightness pattern has the form /\\ through which we cycle in N steps.
-    const uint8_t pulse_duration = 200;
     pbio_color_hsv_t hsv;
-    uint16_t next_animation_progress = (animation_progress + 4) % 300;
 
-    if (animation_progress < pulse_duration) {
-        // Pulse regular or xbox color.
-        pbio_color_to_hsv(pulse_color, &hsv);
-        hsv.v = animation_progress < pulse_duration / 2 ? animation_progress : pulse_duration - animation_progress;
-        if (xbox_connected) {
-            next_animation_progress = (animation_progress + 4) % 200;
-        }
-        if (next_animation_progress < animation_progress) {
-            use_first_color_in_pulse = !use_first_color_in_pulse;
-        }
+    if (xbox_connected) {
+        pbio_color_to_hsv(PBIO_COLOR_GREEN, &hsv);
     } else {
-        // From 200-300, do fast blips for pairing info.
-        pbio_color_t flash_color;
-        uint8_t *button_data;
-        if (pbsys_storage_get_user_data(0, &button_data, 6) == PBIO_SUCCESS && button_data[0] != 0) {
-            flash_color = PBIO_COLOR_YELLOW; // Paired before, waiting.
-        } else {
-            flash_color = PBIO_COLOR_RED; // Never paired.
-        }
-        pbio_color_to_hsv(flash_color, &hsv);
-        hsv.v = animation_progress % 20 < 10 ? 0 : 100;
-    }
-
-    // At low brightness some colors look like others
-    if (hsv.v < 20) {
-        hsv.v = 0;
+        pbio_color_to_hsv(PBIO_COLOR_RED, &hsv);
     }
 
     pbsys_status_light_main->funcs->set_hsv(pbsys_status_light_main, &hsv);

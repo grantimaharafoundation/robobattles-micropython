@@ -26,6 +26,11 @@ void pbsys_program_stop_set_buttons(pbio_button_flags_t buttons);
 static inline void pbsys_program_stop_set_buttons(pbio_button_flags_t buttons) {
 }
 
+#if PBSYS_CONFIG_PROGRAM_STOP
+
+void pbsys_xbox_controller_set_active(bool active);
+bool pbsys_xbox_controller_is_active(void);
+
 #endif // PBSYS_CONFIG_PROGRAM_STOP
 
 #endif // _PBSYS_PROGRAM_STOP_H_
