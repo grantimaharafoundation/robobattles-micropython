@@ -386,7 +386,7 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
     }
 
     pbsys_status_light_main->funcs->set_hsv(pbsys_status_light_main, &hsv);
-    animation_progress = next_animation_progress;
+    //animation_progress = next_animation_progress;
     return 40;
 }
 #endif // PBSYS_CONFIG_STATUS_LIGHT_STATE_ANIMATIONS
