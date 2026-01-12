@@ -233,10 +233,24 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
     bool xbox_connected = pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL);
 
     pbio_color_hsv_t hsv;
-    pbio_color_to_hsv(PBIO_COLOR_WHITE, &hsv);
 
     // Mimic Xbox controller light patters
     if (!xbox_connected) {
+        // Check if we have a stored address for a paired Xbox controller
+        bool has_stored_controller_address = false;
+        uint8_t *stored_addr_ptr;
+        if (pbsys_storage_get_user_data(0, &stored_addr_ptr, 6) == PBIO_SUCCESS) {
+            for (int i = 0; i < 6; i++) {
+                if (stored_addr_ptr[i] != 0) {
+                    has_stored_controller_address = true;
+                    break;
+                }
+            }
+        }
+
+        // Make light orange if not stored, or white if stored
+        pbio_color_to_hsv(has_stored_controller_address ? PBIO_COLOR_WHITE : PBIO_COLOR_ORANGE, &hsv);
+
         // Flashing white search animation. Durations in 1/60ths of a second. Total cycle is 73 ticks.
         const uint8_t fade_up_ticks = 8;
         const uint8_t on_ticks = 29;
@@ -263,6 +277,7 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
         }
     } else {
         // Solid white connected animation
+        pbio_color_to_hsv(PBIO_COLOR_WHITE, &hsv);
         hsv.v = 100;
     }
 
