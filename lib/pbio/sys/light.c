@@ -268,6 +268,10 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
 
     pbsys_status_light_main->funcs->set_hsv(pbsys_status_light_main, &hsv);
 
+    #if PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
+    pbsys_status_light_instance_ble.color_light.funcs->set_hsv(&pbsys_status_light_instance_ble.color_light, &hsv);
+    #endif
+
     // Advance one tick per call
     return 1000 / 60;
 }
@@ -424,6 +428,9 @@ void pbsys_status_light_poll(void) {
 
     pbsys_status_light_set_pattern_or_user_color(&pbsys_status_light_instance_main, new_main_color);
     #if PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
+    // Allow user program to override Bluetooth light if running
+    pbsys_status_light_instance_ble.allow_user_update =
+        pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING);
     pbsys_status_light_set_pattern_or_user_color(&pbsys_status_light_instance_ble, new_ble_color);
     #endif
 
