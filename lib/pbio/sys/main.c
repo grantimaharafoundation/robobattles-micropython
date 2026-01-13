@@ -7,10 +7,7 @@
 
 #include <stdint.h>
 
-#if PBSYS_CONFIG_BLUETOOTH_TOGGLE
 #include <pbdrv/clock.h>
-#endif
-
 #include <pbdrv/reset.h>
 #include <pbdrv/usb.h>
 #include <pbdrv/bluetooth.h>
@@ -163,6 +160,12 @@ int main(int argc, char **argv) {
             // is still set. We need to clear it first to avoid PBIO_ERROR_BUSY.
             pbsys_main_program_start_request_type_t type = program.start_request_type;
             program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
+
+            // Wait a moment for Bluetooth cleanup before restarting.
+            uint32_t start = pbdrv_clock_get_ms();
+            while (pbdrv_clock_get_ms() - start < 500) {
+                pbio_do_one_event();
+            }
 
             pbsys_main_program_request_start(program.id, type);
         } else {

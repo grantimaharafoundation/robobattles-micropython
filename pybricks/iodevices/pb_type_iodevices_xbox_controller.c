@@ -185,6 +185,8 @@ static void pb_xbox_assert_connected(void) {
     if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
         // Request restart of the program
         pbsys_main_program_request_restart();
+        // Ensure that bluetooth state is clean for the next run.
+        pbdrv_bluetooth_disconnect(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL);
         // Stop current program
         mp_raise_type(&mp_type_SystemExit);
     }
