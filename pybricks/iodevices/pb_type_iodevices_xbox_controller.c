@@ -19,6 +19,7 @@
 #include <pbsys/config.h>
 #include <pbsys/storage_settings.h>
 #include <pbsys/storage.h>
+#include <pbsys/main.h>
 
 #include <pybricks/common.h>
 #include <pybricks/parameters.h>
@@ -182,7 +183,10 @@ static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_response_match
 
 static void pb_xbox_assert_connected(void) {
     if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
-        mp_raise_OSError(MP_ENODEV);
+        // Request restart of the program
+        pbsys_main_program_request_restart();
+        // Stop current program
+        mp_raise_type(&mp_type_SystemExit);
     }
 }
 

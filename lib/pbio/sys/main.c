@@ -28,6 +28,9 @@
 // Singleton with information about the currently (or soon) active program.
 static pbsys_main_program_t program;
 
+// Indicates whether a restart was requested.
+static bool restart_requested;
+
 /**
  * Checks if a start request has been made for the main program.
  *
@@ -78,6 +81,10 @@ pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id
     program.start_request_type = start_request_type;
 
     return PBIO_SUCCESS;
+}
+
+void pbsys_main_program_request_restart(void) {
+    restart_requested = true;
 }
 
 /**
@@ -145,7 +152,16 @@ int main(int argc, char **argv) {
         pbsys_bluetooth_rx_set_callback(NULL);
         pbsys_program_stop_set_buttons(PBIO_BUTTON_CENTER);
         pbio_stop_all(true);
-        program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
+
+        // If a restart was requested, preserve the program type so it starts again.
+        if (restart_requested) {
+            restart_requested = false;
+            // The request function cannot be used because it checks if the
+            // program is already running. But we just cleared that flag above.
+            // So we can set the request type directly.
+        } else {
+            program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
+        }
     }
 
     // Stop system processes and save user data before we shutdown.
