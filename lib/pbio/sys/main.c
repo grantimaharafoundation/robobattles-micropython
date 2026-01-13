@@ -156,9 +156,15 @@ int main(int argc, char **argv) {
         // If a restart was requested, preserve the program type so it starts again.
         if (restart_requested) {
             restart_requested = false;
-            // The request function cannot be used because it checks if the
-            // program is already running. But we just cleared that flag above.
-            // So we can set the request type directly.
+
+            // To restart, we need to issue a start request. The request
+            // function checks if a program is already running or pending.
+            // We just cleared the running flag, but the pending flag (start_request_type)
+            // is still set. We need to clear it first to avoid PBIO_ERROR_BUSY.
+            pbsys_main_program_start_request_type_t type = program.start_request_type;
+            program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
+
+            pbsys_main_program_request_start(program.id, type);
         } else {
             program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
         }
