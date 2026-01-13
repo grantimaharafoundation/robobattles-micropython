@@ -86,13 +86,6 @@ pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id
 pbio_error_t pbsys_main_program_validate(pbsys_main_program_t *program);
 
 /**
- * Requests to restart the main application program.
- *
- * This should be called to request a restart when the current program stops.
- */
-void pbsys_main_program_request_restart(void);
-
-/**
  * Runs the main application program.
  *
  * This should be provided by the application running on top of pbio.
@@ -142,9 +135,6 @@ static inline pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_p
 
 static inline pbio_error_t pbsys_main_program_validate(pbsys_main_program_t *program) {
     return PBIO_ERROR_NOT_SUPPORTED;
-}
-
-static inline void pbsys_main_program_request_restart(void) {
 }
 
 static inline void pbsys_main_run_program(pbsys_main_program_t *program) {

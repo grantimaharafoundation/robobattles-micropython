@@ -25,9 +25,6 @@
 // Singleton with information about the currently (or soon) active program.
 static pbsys_main_program_t program;
 
-// Indicates whether a restart was requested.
-static bool restart_requested;
-
 /**
  * Checks if a start request has been made for the main program.
  *
@@ -78,10 +75,6 @@ pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id
     program.start_request_type = start_request_type;
 
     return PBIO_SUCCESS;
-}
-
-void pbsys_main_program_request_restart(void) {
-    restart_requested = true;
 }
 
 /**
@@ -151,8 +144,8 @@ int main(int argc, char **argv) {
         pbio_stop_all(true);
 
         // If a restart was requested, preserve the program type so it starts again.
-        if (restart_requested) {
-            restart_requested = false;
+        if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RESTART)) {
+            pbsys_status_clear(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RESTART);
 
             // To restart, we need to issue a start request. The request
             // function checks if a program is already running or pending.
