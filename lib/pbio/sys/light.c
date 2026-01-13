@@ -283,10 +283,6 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
 
     pbsys_status_light_main->funcs->set_hsv(pbsys_status_light_main, &hsv);
 
-    #if PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
-    pbsys_status_light_instance_ble.color_light.funcs->set_hsv(&pbsys_status_light_instance_ble.color_light, &hsv);
-    #endif
-
     // Advance one tick per call
     return 1000 / 60;
 }
