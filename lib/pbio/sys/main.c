@@ -159,8 +159,13 @@ int main(int argc, char **argv) {
                 pbio_do_one_event();
             }
 
+            // We explicitly call request_start here because we want to force
+            // a reload of the program data and validation. This sets the
+            // start_request_type back to the original value (e.g. BOOT),
+            // causing the loop to run the program again immediately.
             pbsys_main_program_request_start(program.id, type);
         } else {
+            // Normal exit: clear the request type so we go back to idle state.
             program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
         }
     }
