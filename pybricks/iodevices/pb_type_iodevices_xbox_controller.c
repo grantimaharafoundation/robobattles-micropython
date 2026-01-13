@@ -410,10 +410,10 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
                 "Is the controller in pairing mode?"
                 ));
 
-                // If this is reached, the controller's bonds with both this hub and the other hub will be been broken.
-                // Clear stored address so this hub can at least indicate no pairing. No apparent way to detect and indicate on the other hub.
-                uint8_t zero_addr[6] = {0};
-                pbsys_storage_set_user_data(0, zero_addr, 6);*/
+            // If this is reached, the controller's bonds with both this hub and the other hub will be been broken.
+            // Clear stored address so this hub can at least indicate no pairing. No apparent way to detect and indicate on the other hub.
+            uint8_t zero_addr[6] = {0};
+            pbsys_storage_set_user_data(0, zero_addr, 6);*/
         }
         nlr_jump(nlr.ret_val);
     }
