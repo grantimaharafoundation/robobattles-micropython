@@ -7,10 +7,7 @@
 
 #include <stdint.h>
 
-#if PBSYS_CONFIG_BLUETOOTH_TOGGLE
 #include <pbdrv/clock.h>
-#endif
-
 #include <pbdrv/reset.h>
 #include <pbdrv/usb.h>
 #include <pbdrv/bluetooth.h>
@@ -145,7 +142,32 @@ int main(int argc, char **argv) {
         pbsys_bluetooth_rx_set_callback(NULL);
         pbsys_program_stop_set_buttons(PBIO_BUTTON_CENTER);
         pbio_stop_all(true);
-        program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
+
+        // If a restart was requested, preserve the program type so it starts again.
+        if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RESTART)) {
+            pbsys_status_clear(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RESTART);
+
+            // To restart, we need to issue a start request. The request
+            // function checks if a program is already running or pending.
+            // We just cleared the running flag, but the pending flag (start_request_type)
+            // is still set. We need to clear it first to avoid PBIO_ERROR_BUSY.
+            pbsys_main_program_start_request_type_t type = program.start_request_type;
+            program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
+
+            // Wait a moment for Bluetooth cleanup before restarting.
+            while (!pbdrv_bluetooth_is_ready()) {
+                pbio_do_one_event();
+            }
+
+            // We explicitly call request_start here because we want to force
+            // a reload of the program data and validation. This sets the
+            // start_request_type back to the original value (e.g. BOOT),
+            // causing the loop to run the program again immediately.
+            pbsys_main_program_request_start(program.id, type);
+        } else {
+            // Normal exit: clear the request type so we go back to idle state.
+            program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
+        }
     }
 
     // Stop system processes and save user data before we shutdown.

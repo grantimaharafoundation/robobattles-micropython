@@ -329,6 +329,10 @@ typedef enum {
      * @since Pybricks Profile v1.4.0
      */
     PBIO_PYBRICKS_STATUS_BLE_HOST_CONNECTED = 9,
+    /**
+     * User program requested a restart.
+     */
+    PBIO_PYBRICKS_STATUS_USER_PROGRAM_RESTART = 10,
     /** Total number of indications. */
     NUM_PBIO_PYBRICKS_STATUS,
 } pbio_pybricks_status_t;

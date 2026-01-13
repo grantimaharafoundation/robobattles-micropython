@@ -19,6 +19,7 @@
 #include <pbsys/config.h>
 #include <pbsys/storage_settings.h>
 #include <pbsys/storage.h>
+#include <pbsys/status.h>
 
 #include <pybricks/common.h>
 #include <pybricks/parameters.h>
@@ -182,7 +183,15 @@ static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_response_match
 
 static void pb_xbox_assert_connected(void) {
     if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
-        mp_raise_OSError(MP_ENODEV);
+        // Request restart of the program
+        pbsys_status_set(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RESTART);
+
+        // Ensure that bluetooth state is clean for the next run.
+        pb_xbox_t *xbox = &pb_xbox_singleton;
+        pbdrv_bluetooth_peripheral_disconnect(&xbox->task);
+
+        // Stop current program
+        mp_raise_type(&mp_type_SystemExit);
     }
 }
 
