@@ -155,7 +155,8 @@ int main(int argc, char **argv) {
             program.start_request_type = PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_NONE;
 
             // Wait a moment for Bluetooth cleanup before restarting.
-            while (pbio_do_one_event()) {
+            while (!pbdrv_bluetooth_is_ready()) {
+                pbio_do_one_event();
             }
 
             pbsys_main_program_request_start(program.id, type);
