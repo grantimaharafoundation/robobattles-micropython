@@ -2,7 +2,7 @@
 
 # Changelog
 
-## [13.0.3] - 2025-12-03
+## [13.0.3] - 2025-12-14
 
 ### Added
 
@@ -11,12 +11,21 @@
 - Disabled left/right buttons on Prime hub
 - Increased default joystick deadzone and added scaling behavior
 - Swapped button behavior for more consistent behavior when connected to bluetooth and no program is running: now short press shuts down and long press attempts to run program
+- Removed hub name-based custom light colors. Instead, when program is running, the light pattern mimics the Xbox controller to indicate controller connectivity state. If the controller hasn't been connected, it flashes white if a controller is stored in memory, or orange if not. Once the controller is connected, it lights up solid white.
+- Removed special 0 speed behavior from motor.go 
+- Automatically install basic control program (Zoe's Universal Controls)
+- If trying to connect with a controller that was last paired with another hub (and therefore must be re-paired), forget the controller to trigger the orange "no controller paired" status light indicator. Pairing with the other hub still breaks, and that hub has no way of detecting the broken pairing and forgetting the controller. [See known issues]
+- Automatically restart program if controller disconnects. When combined with auto isntall of Zoe's controls, this ensures that non-power-users never encounter bluetooth mode
 - Make Prime hub disconnect from computer when program runs, just like Technic hub. Not ideal, but was the only fix found for issue of bluetooth freezes. Can be reproduced by entering bluetooth mode, connecting hub to computer, pressing play to load program with Xbox controller support onto hub, connecting controller, turning off hub, then repeating steps. Eventually when pressing the bluetooth button on the IDE, the button wheel will appear forever, forcing a browser refresh. After refreshing and repeating the process, bt will connect but after loading the program and connecting the controller, this error will appear "Traceback (most recent call last): File "my_file.py", line 5, in <module> RuntimeError: Unknown error" where line number is the line with XboxController(). The issue will persist until you turn the hub off and on, and (if not using autostart) click the bt button in the IDE to disconnect the hub from the computer.
 
 ### Fixed
 
 - Fixed issue with late unplug/replug crashing the program when using motor functions other than Motor.dc
 - Fixed other consistency issues with late plug
+
+### Known Issues
+
+- If a controller is paired with hub A, then paired with hub B, hub A will try and fail to connect with it in a way that breaks the pairing with hub B.
 
 ## [13.0.2] - 2025-07-01
 
