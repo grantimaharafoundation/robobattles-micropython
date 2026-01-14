@@ -33,7 +33,10 @@ while True:
     compX /= 3
 
     # Control weapon motors
-    weapon.go(compWL - compWR)
+    if compWL - compWR != 0:
+        weapon.go(compWL - compWR)
+    else:
+        weapon.stop()
 
     # Control wheel motors
     if compX != 0 or compY != 0:
