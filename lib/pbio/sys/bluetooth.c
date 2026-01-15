@@ -25,7 +25,6 @@
 
 #include "core.h"
 #include "storage.h"
-#include <mpconfigport.h>
 
 // REVISIT: this can be the negotiated MTU - 3 to allow for better throughput
 #define MAX_CHAR_SIZE 20
@@ -394,16 +393,14 @@ PROCESS_THREAD(pbsys_bluetooth_process, ev, data) {
         PROCESS_WAIT_WHILE(pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING));
 
         // Match Spike Prime hub behavior by shutting down controller when hub is powered off
-        #if PYBRICKS_HUB_TECHNICHUB
         if (pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
             pbsys_init_busy_up();
             static pbio_task_t disconnect_task;
             pbdrv_bluetooth_peripheral_disconnect(&disconnect_task);
-            etimer_set(&timer, 1000);
+            etimer_set(&timer, 400);
             PROCESS_WAIT_WHILE(pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL) && !etimer_expired(&timer));
             pbsys_init_busy_down();
         }
-        #endif
 
         // reset Bluetooth chip
         pbdrv_bluetooth_power_on(false);
