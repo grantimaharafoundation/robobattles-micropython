@@ -183,15 +183,8 @@ static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_response_match
 
 static void pb_xbox_assert_connected(void) {
     if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
-        // Request restart of the program
-        pbsys_status_set(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RESTART);
-
-        // Ensure that bluetooth state is clean for the next run.
-        pb_xbox_t *xbox = &pb_xbox_singleton;
-        pbdrv_bluetooth_peripheral_disconnect(&xbox->task);
-
-        // Stop current program
-        mp_raise_type(&mp_type_SystemExit);
+        // Shut down the hub.
+        pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
     }
 }
 
