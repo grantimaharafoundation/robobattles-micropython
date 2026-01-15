@@ -11,7 +11,7 @@
 - Disabled left/right buttons on Prime hub
 - Increased default joystick deadzone and added scaling behavior
 - Swapped button behavior for more consistent behavior when connected to bluetooth and no program is running: now short press shuts down and long press attempts to run program
-- Removed hub name-based custom light colors. Instead, when program is running, the light pattern mimics the Xbox controller to indicate controller connectivity state. If the controller hasn't been connected, it flashes white if a controller is stored in memory, or orange if not. Once the controller is connected, it lights up solid white.
+- Removed hub name-based custom light colors. Instead, when program is running, the light pattern mimics the Xbox controller to indicate controller connectivity state. Flashes white until controller has connected, then turns solid white.
 - Removed special 0 speed behavior from motor.go 
 - Automatically install basic control program (Zoe's Universal Controls)
 - Automatically restart program if controller disconnects. When combined with auto isntall of Zoe's controls, this ensures that non-power-users never encounter bluetooth mode
