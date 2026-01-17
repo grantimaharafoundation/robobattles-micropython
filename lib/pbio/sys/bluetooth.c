@@ -310,6 +310,12 @@ PROCESS_THREAD(pbsys_bluetooth_process, ev, data) {
         pbdrv_bluetooth_power_on(true);
         PROCESS_WAIT_UNTIL(pbdrv_bluetooth_is_ready());
 
+        // Delay to mirror the autostart delay in main.c, to prevent hub from appearing and persisting (unusably) in IDE device list before program starts
+        #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
+        etimer_set(&timer, 400);
+        PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER && etimer_expired(&timer));
+        #endif
+
         // Start advertising, and show visual indicator on status light.
         pbdrv_bluetooth_start_advertising();
         pbsys_status_set(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING);
