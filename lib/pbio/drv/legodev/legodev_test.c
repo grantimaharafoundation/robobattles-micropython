@@ -78,7 +78,7 @@ void pbdrv_legodev_init(void) {
         if (!legodev->is_motor) {
             pbio_dcmotor_t *dcmotor;
             pbio_dcmotor_get_dcmotor(legodev, &dcmotor);
-            legodev->uart_dev = pbdrv_legodev_pup_uart_configure(0, 0, dcmotor);
+            legodev->uart_dev = pbdrv_legodev_pup_uart_configure(legodev, 0, 0, dcmotor);
         }
     }
 

@@ -112,6 +112,10 @@ static mp_obj_t pb_type_Motor_make_new(const mp_obj_type_t *type, size_t n_args,
     int32_t gear_ratio = get_gear_ratio(gears_in);
     pb_assert(pbio_servo_setup(self->srv, type_id, positive_direction, gear_ratio, reset_angle, precision_profile));
 
+    // Store settings so they can be restored when plugging in a motor late.
+    self->srv->gear_ratio = gear_ratio;
+    self->srv->precision_profile = precision_profile;
+
     #if PYBRICKS_PY_COMMON_CONTROL
     // Create an instance of the Control class
     self->control = pb_type_Control_obj_make_new(&self->srv->control);
