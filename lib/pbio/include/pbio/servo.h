@@ -85,6 +85,10 @@ typedef struct _pbio_servo_t {
      * occur.
      */
     bool run_update_loop;
+    /**
+     * Flag to indicate that the servo is disconnected.
+     */
+    bool disconnected;
 } pbio_servo_t;
 
 /**

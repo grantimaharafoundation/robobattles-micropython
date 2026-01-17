@@ -82,6 +82,13 @@ static pbio_error_t pbio_servo_update(pbio_servo_t *srv) {
     pbio_control_state_t state;
     pbio_error_t err = pbio_servo_get_state_control(srv, &state);
     if (err != PBIO_SUCCESS) {
+        // If device is disconnected or not ready, coast and wait for it to return.
+        // Otherwise, pass the error up to the caller to stop the loop.
+        if (err == PBIO_ERROR_NO_DEV || err == PBIO_ERROR_AGAIN) {
+            pbio_dcmotor_coast(srv->dcmotor);
+            srv->disconnected = true;
+            return PBIO_SUCCESS;
+        }
         return err;
     }
 
@@ -114,6 +121,12 @@ static pbio_error_t pbio_servo_update(pbio_servo_t *srv) {
         // Actuate the servo. For torque control, the torque payload is passed along. Otherwise payload is ignored.
         err = pbio_servo_actuate(srv, requested_actuation, total_torque);
         if (err != PBIO_SUCCESS) {
+            // If device is disconnected or not ready, we can just ignore it. The motor is
+            // already coasting anyway. The error will be picked up at the
+            // start of the next loop.
+            if (err == PBIO_ERROR_NO_DEV || err == PBIO_ERROR_AGAIN) {
+                return PBIO_SUCCESS;
+            }
             return err;
         }
     }
@@ -370,6 +383,7 @@ pbio_error_t pbio_servo_setup(pbio_servo_t *srv, pbdrv_legodev_type_id_t type, p
     // Now that all checks have succeeded, we know that this motor is ready.
     // So we register this servo from control loop updates.
     pbio_servo_update_loop_set_state(srv, true);
+    srv->disconnected = false;
 
     return PBIO_SUCCESS;
 }
@@ -561,6 +575,11 @@ pbio_error_t pbio_servo_stop(pbio_servo_t *srv, pbio_control_on_completion_t on_
         pbio_control_state_t state;
         err = pbio_servo_get_state_control(srv, &state);
         if (err != PBIO_SUCCESS) {
+            // If device is disconnected or not ready, do nothing, but don't raise an error.
+            // This allows the script to continue and try again later.
+            if (err == PBIO_ERROR_NO_DEV || err == PBIO_ERROR_AGAIN) {
+                return PBIO_SUCCESS;
+            }
             return err;
         }
 
@@ -614,6 +633,11 @@ static pbio_error_t pbio_servo_run_time_common(pbio_servo_t *srv, int32_t speed,
     pbio_control_state_t state;
     err = pbio_servo_get_state_control(srv, &state);
     if (err != PBIO_SUCCESS) {
+        // If device is disconnected or not ready, do nothing, but don't raise an error.
+        // This allows the script to continue and try again later.
+        if (err == PBIO_ERROR_NO_DEV || err == PBIO_ERROR_AGAIN) {
+            return PBIO_SUCCESS;
+        }
         return err;
     }
 
