@@ -251,6 +251,29 @@ static void run_user_program(void) {
         mpy_info_t *info = mpy_data_find(MP_QSTR___main__);
 
         if (!info) {
+            #if MICROPY_MODULE_FROZEN_MPY
+            void *modref;
+            int frozen_type;
+            if (mp_find_frozen_module("_zoes_universal_controls.py", &frozen_type, &modref) == MP_IMPORT_STAT_FILE) {
+                const mp_frozen_module_t *frozen = modref;
+                mp_module_context_t *context = m_new_obj(mp_module_context_t);
+                context->module.globals = mp_globals_get();
+                context->constants = frozen->constants;
+
+                mp_obj_t module_fun = mp_make_function_from_raw_code(frozen->rc, context, NULL);
+
+                // Run the script while letting CTRL-C interrupt it.
+                mp_hal_set_interrupt_char(CHAR_CTRL_C);
+                mp_call_function_0(module_fun);
+                mp_hal_set_interrupt_char(-1);
+
+                mp_handle_pending(true);
+
+                nlr_pop();
+                return;
+            }
+            #endif
+
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("no __main__ module"));
         }
 
@@ -327,7 +350,18 @@ pbio_error_t pbsys_main_program_validate(pbsys_main_program_t *program) {
 
     // If requesting a user program, ensure that it exists and is valid.
     uint32_t program_size = program->code_end - program->code_start;
-    if (program_size == 0 || program_size > pbsys_storage_get_maximum_program_size()) {
+    if (program_size > pbsys_storage_get_maximum_program_size()) {
+        return PBIO_ERROR_NOT_SUPPORTED;
+    }
+
+    if (program_size == 0) {
+        #if MICROPY_MODULE_FROZEN_MPY
+        void *modref;
+        int frozen_type;
+        if (mp_find_frozen_module("_zoes_universal_controls.py", &frozen_type, &modref) == MP_IMPORT_STAT_FILE) {
+            return PBIO_SUCCESS;
+        }
+        #endif
         return PBIO_ERROR_NOT_SUPPORTED;
     }
 
