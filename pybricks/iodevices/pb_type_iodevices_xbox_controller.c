@@ -17,6 +17,7 @@
 #include <pbio/task.h>
 
 #include <pbsys/config.h>
+#include <pbsys/status.h>
 #include <pbsys/storage_settings.h>
 #include <pbsys/storage.h>
 
@@ -181,8 +182,9 @@ static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_response_match
 }
 
 static void pb_xbox_assert_connected(void) {
+    // Shut down the hub the controller is turned off
     if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
-        mp_raise_OSError(MP_ENODEV);
+        pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
     }
 }
 
