@@ -2,7 +2,30 @@
 
 # Changelog
 
-## [Unreleased]
+## [13.0.2] - 2025-07-01
+
+### Added
+
+- Added simplified Motor.go method with normalized -100 to 100 input for easier programming
+- Defaulted all motors to max acceleration to avoid needing to manually set fast acceleration in code
+
+## [13.0.1] - 2025-06-30
+
+### Fixed
+
+- Fixed issue when plugging in motor late when program uses more than one motor
+
+## [13.0.0] - 2025-06-29
+
+### Added
+
+- Automatically import all modules to simplify code
+- Added customizable bluetooth light patterns to differentiate hubs
+- Allowed program to start without motor being plugged in
+
+### Fixed
+
+- Xbox controller connection issues when multiple hubs and controllers are in same environment. Previously, when a hub starts running a program, it searches indefinitely for any Xbox controller that is either searching or pairing. If it finds a controller that is pairing, it pairs to that controller. If it finds a controller that is Searching, one of two things happen: 1) If the controller signals that it was last paired to this hub, they connect. 2) If the controller signals that it was last paired to a different hub, they do not connect, the hub switches back into bluetooth mode, AND the controller permanently forgets the last hub it was paired to. In this update, the hub DOES remember the last controller it was paired to. When a hub starts running a program, it searches indefinitely for any Xbox controller that is either searching or pairing. (same as before) But now if it finds a controller that is searching, if the controller signals that it was last paired to a different hub, the hub completely ignores the controller and keeps searching for another controller.
 
 ## [3.6.1] - 2025-03-11
 
