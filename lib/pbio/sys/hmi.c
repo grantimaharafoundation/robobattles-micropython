@@ -38,6 +38,9 @@ static uint8_t selected_slot = 0;
 // Active button press was a long press
 static bool long_pressed = false;
 
+// Power button has been released at some point during this hub cycle.
+static bool power_button_released_this_cycle = false;
+
 /**
  * Protothread to monitor the button state to trigger starting the user program.
  * @param [in]  button_pressed      The current button state.
@@ -116,8 +119,8 @@ void pbsys_hmi_poll(void) {
             pbsys_status_set(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
             update_program_run_button_wait_state(true);
 
-            // Take action when button is held down for 2 seconds
-            if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
+            // Take action when button is held down for 2 seconds, but not if it's still being held from power-on press
+            if (power_button_released_this_cycle && pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
                 // Long press completed
                 if (!long_pressed) {
                     // Stop program if currently running. This puts hub in bluetooth mode.
@@ -136,6 +139,7 @@ void pbsys_hmi_poll(void) {
             pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
             update_program_run_button_wait_state(false);
             long_pressed = false;
+            power_button_released_this_cycle = true;
         }
     }
 
