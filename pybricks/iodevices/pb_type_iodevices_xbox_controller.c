@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <pbdrv/bluetooth.h>
 #include <pbio/button.h>
@@ -295,7 +296,7 @@ static mp_obj_t pb_xbox_button_pressed(void) {
 static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     PB_PARSE_ARGS_CLASS(n_args, n_kw, args,
-        PB_ARG_DEFAULT_INT(joystick_deadzone, 10)
+        PB_ARG_DEFAULT_INT(joystick_deadzone, 25)
         // Debug parameter to stay connected to the host on Technic Hub.
         // Works only on some hosts for the moment, so False by default.
         #if PYBRICKS_HUB_TECHNICHUB || PYBRICKS_HUB_PRIMEHUB
@@ -480,18 +481,31 @@ static mp_obj_t pb_xbox_profile(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(pb_xbox_profile_obj, pb_xbox_profile);
 
+static mp_int_t apply_deadzone(mp_int_t value, mp_int_t deadzone) {
+    // Inside deadzone → zero
+    if (value > -deadzone && value < deadzone) {
+        return 0;
+    }
+
+    // Determine sign
+    mp_int_t sign = (value >= 0) ? 1 : -1;
+
+    // Rescale so deadzone → 0 and max → 100
+    mp_int_t magnitude = abs(value) - deadzone;
+    mp_int_t scaled = (magnitude * 100) / (100 - deadzone);
+
+    return scaled * sign;
+}
+
 static mp_obj_t pb_xbox_joystick(mp_obj_t self_in, uint16_t x_raw, uint16_t y_raw) {
     pb_type_xbox_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     mp_int_t x = (x_raw - INT16_MAX) * 100 / INT16_MAX;
     mp_int_t y = (INT16_MAX - y_raw) * 100 / INT16_MAX;
 
-    // Apply square deadzone to prevent drift.
-    if (x < self->joystick_deadzone && x > -self->joystick_deadzone &&
-        y < self->joystick_deadzone && y > -self->joystick_deadzone) {
-        x = 0;
-        y = 0;
-    }
+    // Apply square deadzone to prevent drift + rescaling per axis
+    x = apply_deadzone(x, self->joystick_deadzone);
+    y = apply_deadzone(y, self->joystick_deadzone);
 
     mp_obj_t directions[] = {
         mp_obj_new_int(x),
