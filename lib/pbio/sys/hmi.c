@@ -87,8 +87,6 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
 
 #if PBSYS_CONFIG_HMI_NUM_SLOTS
 
-static struct pt update_left_right_button_wait_state_pt;
-
 /**
  * Gets the currently selected program slot.
  *
@@ -96,63 +94,6 @@ static struct pt update_left_right_button_wait_state_pt;
  */
 uint8_t pbsys_hmi_get_selected_program_slot(void) {
     return selected_slot;
-}
-
-/**
- * Protothread to monitor the left and right button state to select a slot.
- *
- * @param [in]  left_button_pressed      The current left button state.
- * @param [in]  right_button_pressed     The current right button state.
- */
-static PT_THREAD(update_left_right_button_wait_state(bool left_button_pressed, bool right_button_pressed)) {
-    struct pt *pt = &update_left_right_button_wait_state_pt;
-
-    // This should not be active while a program is running.
-    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
-        PT_EXIT(pt);
-    }
-
-    static uint8_t previous_slot;
-    static uint32_t first_press_time;
-
-    PT_BEGIN(pt);
-
-    for (;;) {
-        // Buttons may still be pressed during user program
-        PT_WAIT_UNTIL(pt, !left_button_pressed && !right_button_pressed);
-
-        // Wait for either button.
-        PT_WAIT_UNTIL(pt, left_button_pressed || right_button_pressed);
-
-        first_press_time = pbdrv_clock_get_ms();
-
-        // On right, increment slot when possible.
-        if (right_button_pressed && selected_slot < 4) {
-            selected_slot++;
-            pbsys_hub_light_matrix_update_program_slot();
-        }
-        // On left, decrement slot when possible.
-        if (left_button_pressed && selected_slot > 0) {
-            selected_slot--;
-            pbsys_hub_light_matrix_update_program_slot();
-        }
-
-        // Next state could be either both pressed or both released.
-        PT_WAIT_UNTIL(pt, left_button_pressed == right_button_pressed);
-
-        // If both were pressed soon after another, user wanted to start port view,
-        // not switch programs, so revert slot change.
-        if (left_button_pressed && pbdrv_clock_get_ms() - first_press_time < 100) {
-            selected_slot = previous_slot;
-            pbsys_hub_light_matrix_update_program_slot();
-            pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_PORT_VIEW, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
-        } else {
-            // Successful switch. And UI was already updated.
-            previous_slot = selected_slot;
-        }
-    }
-
-    PT_END(pt);
 }
 
 #endif // PBSYS_CONFIG_HMI_NUM_SLOTS
@@ -220,10 +161,6 @@ void pbsys_hmi_poll(void) {
             long_pressed = false;
             #endif
         }
-
-        #if PBSYS_CONFIG_HMI_NUM_SLOTS
-        update_left_right_button_wait_state(btn & PBIO_BUTTON_LEFT, btn & PBIO_BUTTON_RIGHT);
-        #endif // PBSYS_CONFIG_HMI_NUM_SLOTS
     }
 
     pbsys_status_light_poll();
