@@ -7,6 +7,7 @@
 
 #include <contiki.h>
 
+#include <pbdrv/bluetooth.h>
 #include <pbdrv/charger.h>
 #include <pbdrv/led.h>
 #include <pbio/color.h>
@@ -227,24 +228,44 @@ static void pbsys_status_light_handle_status_change(void) {
 static uint8_t animation_progress;
 
 static uint32_t default_user_program_light_animation_next(pbio_light_animation_t *animation) {
-    // The brightness pattern has the form /\ through which we cycle in N steps.
-    // It is reset back to the start when the user program starts.
-    const uint8_t animation_progress_max = 200;
+    pbio_color_hsv_t hsv;
+    pbio_color_to_hsv(PBIO_COLOR_WHITE, &hsv);
 
-    pbio_color_hsv_t hsv = {
-        .h = PBIO_COLOR_HUE_BLUE,
-        .s = 100,
-        .v = animation_progress < animation_progress_max / 2 ?
-            animation_progress :
-            animation_progress_max - animation_progress,
-    };
+    // Mimic Xbox controller light patterns
+    if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
+        // Controller not connected. Flashing white search animation. Durations in 1/60ths of a second.
+        const uint8_t fade_up_ticks = 8;
+        const uint8_t on_ticks = 29;
+        const uint8_t fade_down_ticks = 8;
+        const uint8_t off_ticks = 28;
+        const uint8_t total_ticks = fade_up_ticks + on_ticks + fade_down_ticks + off_ticks;
+
+        if (animation_progress < fade_up_ticks) {
+            // Fade to full white: 0 to 7
+            hsv.v = (animation_progress * 100) / fade_up_ticks;
+        } else if (animation_progress < fade_up_ticks + on_ticks) {
+            // Stay fully lit up white: 8 to 36
+            hsv.v = 100;
+        } else if (animation_progress < fade_up_ticks + on_ticks + fade_down_ticks) {
+            // Fade to off: 37 to 44
+            uint8_t elapsed = animation_progress - (fade_up_ticks + on_ticks);
+            hsv.v = 100 - (elapsed * 100) / fade_down_ticks;
+        } else {
+            // Stay off: 45 to 72
+            hsv.v = 0;
+        }
+
+        // This increment controls the speed of the pattern and wraps on completion
+        animation_progress = (animation_progress + 1) % total_ticks;
+    } else {
+        // Controller connected. Solid white connected animation.
+        hsv.v = 100;
+    }
 
     pbsys_status_light_main->funcs->set_hsv(pbsys_status_light_main, &hsv);
 
-    // This increment controls the speed of the pattern and wraps on completion
-    animation_progress = (animation_progress + 4) % animation_progress_max;
-
-    return 40;
+    // Advance one tick per call
+    return 1000 / 60;
 }
 #endif // PBSYS_CONFIG_STATUS_LIGHT_STATE_ANIMATIONS
 
