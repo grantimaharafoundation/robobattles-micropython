@@ -26,6 +26,8 @@
 #include "hci_transport_h4.h"
 #include "pybricks_service_server.h"
 
+#include <pbsys/storage.h>
+
 #ifdef PBDRV_CONFIG_BLUETOOTH_BTSTACK_HUB_KIND
 #define HUB_KIND PBDRV_CONFIG_BLUETOOTH_BTSTACK_HUB_KIND
 #else
@@ -792,6 +794,7 @@ static PT_THREAD(peripheral_scan_and_connect_task(struct pt *pt, pbio_task_t *ta
         // if there is any failure to connect or error while enumerating
         // attributes, con_state will be set to CON_STATE_NONE
         if (handset.con_state == CON_STATE_NONE) {
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             task->status = PBIO_ERROR_FAILED;
             PT_EXIT(pt);
         }
