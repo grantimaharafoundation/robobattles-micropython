@@ -590,6 +590,8 @@ try_again:
         // here because the scan response failed the last time. It probably
         // won't match now and we should try a different device.
         if (adv_flags & PBDRV_BLUETOOTH_AD_MATCH_ADDRESS) {
+            uint8_t failure_flag = 1;
+            pbsys_storage_set_user_data(6, &failure_flag, 1);
             goto try_again;
         }
 
