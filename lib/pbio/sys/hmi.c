@@ -23,7 +23,9 @@
 #include <pbsys/main.h>
 #include <pbsys/program_stop.h>
 #include <pbsys/status.h>
+#include <pbsys/storage.h>
 #include <pbsys/storage_settings.h>
+
 
 #include "light_matrix.h"
 #include "light.h"
