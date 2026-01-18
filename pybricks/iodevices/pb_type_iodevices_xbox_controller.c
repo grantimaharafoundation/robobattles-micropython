@@ -405,9 +405,6 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
     // to read the HID characteristics. So inform the user to press/hold the
     // pair button to put it into the right mode.
     if (nlr_push(&nlr) == 0) {
-        // Set connection failure flag.
-        uint8_t failure_flag = 1;
-        pbsys_storage_set_user_data(6, &failure_flag, 1);
         // It seems we need to read the (unused) map only once after pairing
         // to make the controller active. We'll still read it every time to
         // catch the case where user might not have done this at least once.
