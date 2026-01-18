@@ -405,6 +405,9 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
     // to read the HID characteristics. So inform the user to press/hold the
     // pair button to put it into the right mode.
     if (nlr_push(&nlr) == 0) {
+        // Set connection failure flag.
+        uint8_t failure_flag = 1;
+        pbsys_storage_set_user_data(6, &failure_flag, 1);
         // It seems we need to read the (unused) map only once after pairing
         // to make the controller active. We'll still read it every time to
         // catch the case where user might not have done this at least once.
@@ -416,6 +419,9 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         pb_xbox_discover_and_read(&pb_xbox_char_hid_report);
         nlr_pop();
     } else {
+        // Set connection failure flag.
+        uint8_t failure_flag = 1;
+        pbsys_storage_set_user_data(6, &failure_flag, 1);
         if (xbox->task.status != PBIO_SUCCESS) {
             mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT(
                 "Connected, but not allowed to read buttons. "
