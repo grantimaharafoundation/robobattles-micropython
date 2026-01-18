@@ -405,12 +405,11 @@ void pbsys_status_light_poll(void) {
 
 
     pbio_color_t new_main_color = new_warning_color;
-    #if !PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
-    // Overlay warnings on ble state on hubs with just one light.
+
+    // Overlay warnings on ble state.
     if (new_warning_color == PBIO_COLOR_NONE) {
         new_main_color = new_ble_color;
     }
-    #endif
 
     // If the new system indication is not overriding the status light and a user
     // program is running, then we can allow the user program to directly change
@@ -420,7 +419,7 @@ void pbsys_status_light_poll(void) {
 
     pbsys_status_light_set_pattern_or_user_color(&pbsys_status_light_instance_main, new_main_color);
     #if PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
-    pbsys_status_light_set_pattern_or_user_color(&pbsys_status_light_instance_ble, new_ble_color);
+    pbsys_status_light_set_pattern_or_user_color(&pbsys_status_light_instance_ble, PBIO_COLOR_NONE);
     #endif
 
     // REVISIT: We should be able to make updating the state event driven instead of polled.
