@@ -382,6 +382,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
 
         case GAP_EVENT_ADVERTISING_REPORT: {
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             uint8_t event_type = gap_event_advertising_report_get_advertising_event_type(packet);
             uint8_t data_length = gap_event_advertising_report_get_data_length(packet);
             const uint8_t *data = gap_event_advertising_report_get_data(packet);
