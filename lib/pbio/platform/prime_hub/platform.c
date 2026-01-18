@@ -1001,14 +1001,20 @@ void SystemInit(void) {
     // This is done early to ensure the power stays on even if the button is
     // pressed only shortly. The crystal startup can take a while.
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-    GPIO_InitTypeDef gpio_init = {
-        .Pin = GPIO_PIN_13,
-        .Mode = GPIO_MODE_OUTPUT_PP,
-        .Speed = GPIO_SPEED_FREQ_LOW,
-        .Pull = GPIO_NOPULL,
-    };
-    HAL_GPIO_Init(GPIOA, &gpio_init);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_SET);
+    // Delay after an RCC peripheral clock enabling
+    (void)RCC->AHB1ENR;
+
+    // Set PA13 to Output (01)
+    // Clear bits 27:26 (Mode) and set to 01 (Output)
+    GPIOA->MODER = (GPIOA->MODER & ~(3U << 26)) | (1U << 26);
+
+    // Set Speed to Low (00), Pull to None (00), Type to PP (0)
+    GPIOA->OSPEEDR &= ~(3U << 26);
+    GPIOA->PUPDR &= ~(3U << 26);
+    GPIOA->OTYPER &= ~(1U << 13);
+
+    // Set Pin High
+    GPIOA->BSRR = (1U << 13);
 
     // enable 8-byte stack alignment for IRQ handlers, in accord with EABI
     SCB->CCR |= SCB_CCR_STKALIGN_Msk;
