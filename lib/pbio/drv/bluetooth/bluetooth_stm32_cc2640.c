@@ -506,6 +506,8 @@ static PT_THREAD(peripheral_scan_and_connect_task(struct pt *pt, pbio_task_t *ta
 
     static pbio_error_t connection_error;
 
+    pbsys_storage_set_user_data(6, 1, 1);
+
     PT_BEGIN(pt);
 
     // temporarily stop observing so we can active scan
@@ -547,8 +549,6 @@ restart_scan:
     PT_WAIT_UNTIL(pt, hci_command_status);
 
     peri->status = read_buf[8]; // debug
-
-    pbsys_storage_set_user_data(6, 1, 1);
 
     if (peri->status != bleSUCCESS) {
         task->status = ble_error_to_pbio_error(peri->status);
