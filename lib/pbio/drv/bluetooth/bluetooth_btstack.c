@@ -351,6 +351,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 if (peri->options & PBDRV_BLUETOOTH_PERIPHERAL_OPTIONS_PAIR) {
                     // Re-encryption doesn't seem to work reliably, so we just
                     // delete the bond and start over.
+                    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                     gap_delete_bonding(peri->bdaddr_type, peri->bdaddr);
                     sm_request_pairing(peri->con_handle);
                     handset.con_state = CON_STATE_WAIT_BONDING;
