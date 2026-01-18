@@ -327,6 +327,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         }
 
         case HCI_EVENT_LE_META:
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             if (hci_event_le_meta_get_subevent_code(packet) != HCI_SUBEVENT_LE_CONNECTION_COMPLETE) {
                 break;
             }
