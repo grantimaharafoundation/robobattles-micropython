@@ -81,11 +81,6 @@ static struct pt update_bluetooth_button_wait_state_pt;
 static PT_THREAD(update_bluetooth_button_wait_state(bool button_pressed)) {
     struct pt *pt = &update_bluetooth_button_wait_state_pt;
 
-    // This should not be active while a program is running.
-    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
-        PT_EXIT(pt);
-    }
-
     PT_BEGIN(pt);
 
     for (;;) {
