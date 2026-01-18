@@ -666,6 +666,8 @@ try_again:
 
     PT_WAIT_WHILE(pt, write_xfer_size);
     GAP_EstablishLinkReq(0, 0, peri->bdaddr_type, peri->bdaddr);
+    uint8_t failure_flag = 1;
+    pbsys_storage_set_user_data(6, &failure_flag, 1);
     PT_WAIT_UNTIL(pt, hci_command_status);
 
     peri->status = read_buf[8]; // debug

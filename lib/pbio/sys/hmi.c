@@ -68,6 +68,38 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
     PT_END(pt);
 }
 
+#if PBSYS_CONFIG_BLUETOOTH_TOGGLE
+
+static struct pt update_bluetooth_button_wait_state_pt;
+
+/**
+ * Protothread to monitor the button state to toggle Bluetooth.
+ * @param [in]  button_pressed      The current button state.
+ */
+static PT_THREAD(update_bluetooth_button_wait_state(bool button_pressed)) {
+    struct pt *pt = &update_bluetooth_button_wait_state_pt;
+
+    // This should not be active while a program is running.
+    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+        PT_EXIT(pt);
+    }
+
+    PT_BEGIN(pt);
+
+    for (;;) {
+        // button may still be pressed during user program
+        PT_WAIT_UNTIL(pt, !button_pressed);
+        PT_WAIT_UNTIL(pt, button_pressed);
+        uint8_t failure_flag = 0;
+        pbsys_storage_set_user_data(6, &failure_flag, 1);
+        pbsys_storage_settings_bluetooth_enabled_request_toggle();
+    }
+
+    PT_END(pt);
+}
+
+#endif // PBSYS_CONFIG_BLUETOOTH_TOGGLE
+
 #if PBSYS_CONFIG_HMI_NUM_SLOTS
 
 /**
@@ -85,6 +117,10 @@ void pbsys_hmi_init(void) {
     pbsys_status_light_init();
     pbsys_hub_light_matrix_init();
     PT_INIT(&update_program_run_button_wait_state_pt);
+
+    #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
+    PT_INIT(&update_bluetooth_button_wait_state_pt);
+    #endif // PBSYS_CONFIG_BLUETOOTH_TOGGLE
 }
 
 void pbsys_hmi_handle_event(process_event_t event, process_data_t data) {
@@ -141,6 +177,10 @@ void pbsys_hmi_poll(void) {
             long_pressed = false;
             power_button_released_this_cycle = true;
         }
+
+        #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
+        update_bluetooth_button_wait_state(btn & PBSYS_CONFIG_BLUETOOTH_TOGGLE_BUTTON);
+        #endif // PBSYS_CONFIG_BLUETOOTH_TOGGLE
     }
 
     pbsys_status_light_poll();
