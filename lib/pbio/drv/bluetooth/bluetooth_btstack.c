@@ -780,8 +780,6 @@ static PT_THREAD(peripheral_scan_and_connect_task(struct pt *pt, pbio_task_t *ta
         PT_WAIT_UNTIL(pt, pybricks_con_handle == HCI_CON_HANDLE_INVALID);
     }
 
-    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
-
     // active scanning to get scan response data.
     // scan interval: 48 * 0.625ms = 30ms
     gap_set_scan_params(1, 0x30, 0x30, 0);
