@@ -997,6 +997,19 @@ extern uint32_t *_fw_isr_vector_src;
 
 // Called from assembly code in startup.s
 void SystemInit(void) {
+    // Keep main power on (PA13)
+    // This is done early to ensure the power stays on even if the button is
+    // pressed only shortly. The crystal startup can take a while.
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+    GPIO_InitTypeDef gpio_init = {
+        .Pin = GPIO_PIN_13,
+        .Mode = GPIO_MODE_OUTPUT_PP,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+        .Pull = GPIO_NOPULL,
+    };
+    HAL_GPIO_Init(GPIOA, &gpio_init);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_SET);
+
     // enable 8-byte stack alignment for IRQ handlers, in accord with EABI
     SCB->CCR |= SCB_CCR_STKALIGN_Msk;
 
@@ -1040,11 +1053,4 @@ void SystemInit(void) {
         RCC_APB2ENR_UART10EN | RCC_APB2ENR_ADC1EN | RCC_APB2ENR_SPI1EN | RCC_APB2ENR_SYSCFGEN;
     RCC->AHB2ENR |= RCC_AHB2ENR_OTGFSEN;
 
-    // Keep main power on (PA13)
-    GPIO_InitTypeDef gpio_init = {
-        .Pin = GPIO_PIN_13,
-        .Mode = GPIO_MODE_OUTPUT_PP,
-    };
-    HAL_GPIO_Init(GPIOA, &gpio_init);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_SET);
 }
