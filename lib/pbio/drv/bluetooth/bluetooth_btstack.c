@@ -382,7 +382,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
 
         case GAP_EVENT_ADVERTISING_REPORT: {
-            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             uint8_t event_type = gap_event_advertising_report_get_advertising_event_type(packet);
             uint8_t data_length = gap_event_advertising_report_get_data_length(packet);
             const uint8_t *data = gap_event_advertising_report_get_data(packet);
@@ -391,11 +390,13 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             gap_event_advertising_report_get_address(packet, address);
 
             if (observe_callback) {
+                pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                 int8_t rssi = gap_event_advertising_report_get_rssi(packet);
                 observe_callback(event_type, data, data_length, rssi);
             }
 
             if (handset.con_state == CON_STATE_WAIT_ADV_IND) {
+                pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                 // Match advertisement data against context-specific filter.
                 pbdrv_bluetooth_ad_match_result_flags_t adv_flags = PBDRV_BLUETOOTH_AD_MATCH_NONE;
                 if (peri->match_adv) {
@@ -415,7 +416,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     handset.con_state = CON_STATE_WAIT_SCAN_RSP;
                 }
             } else if (handset.con_state == CON_STATE_WAIT_SCAN_RSP) {
-
+                pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                 char *detected_name = (char *)&data[2];
                 const uint8_t max_len = sizeof(peri->name);
 
