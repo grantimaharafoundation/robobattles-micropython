@@ -506,7 +506,7 @@ static PT_THREAD(peripheral_scan_and_connect_task(struct pt *pt, pbio_task_t *ta
 
     static pbio_error_t connection_error;
 
-    pbsys_storage_set_user_data(6, 1, 1);
+    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
 
     PT_BEGIN(pt);
 
@@ -592,7 +592,7 @@ try_again:
         // here because the scan response failed the last time. It probably
         // won't match now and we should try a different device.
         if (adv_flags & PBDRV_BLUETOOTH_AD_MATCH_ADDRESS) {
-            pbsys_storage_set_user_data(6, 1, 1);
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             goto try_again;
         }
 
@@ -667,7 +667,7 @@ try_again:
 
     PT_WAIT_WHILE(pt, write_xfer_size);
     GAP_EstablishLinkReq(0, 0, peri->bdaddr_type, peri->bdaddr);
-    pbsys_storage_set_user_data(6, 1, 1);
+    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
     PT_WAIT_UNTIL(pt, hci_command_status);
 
     peri->status = read_buf[8]; // debug
@@ -693,7 +693,7 @@ try_again:
         DEBUG_PRINT_PT(pt, "Auth complete: 0x%02x\n", bond_auth_err);
 
         if (bond_auth_err != 0) {
-            pbsys_storage_set_user_data(6, 1, 1);
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             if (bond_auth_err == bleInvalidEventId) {
                 // Pairing rejected by peripheral. This can happen if the
                 // peripheral has been connected with a different device before
@@ -1703,7 +1703,7 @@ static void handle_event(uint8_t *packet) {
                     break;
 
                 case GAP_LINK_TERMINATED: {
-                    pbsys_storage_set_user_data(6, 1, 1);
+                    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                     DBG("bye: %04x", connection_handle);
                     if (conn_handle == connection_handle) {
                         conn_handle = NO_CONNECTION;
