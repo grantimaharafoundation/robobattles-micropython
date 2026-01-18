@@ -282,6 +282,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
         case GATT_EVENT_QUERY_COMPLETE:
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             if (handset.con_state == CON_STATE_WAIT_READ_CHARACTERISTIC) {
                 // Done reading characteristic.
                 handset.con_state = CON_STATE_READ_CHARACTERISTIC_COMPLETE;
