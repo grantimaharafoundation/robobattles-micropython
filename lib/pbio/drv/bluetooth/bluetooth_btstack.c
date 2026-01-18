@@ -303,6 +303,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     handset.con_state = CON_STATE_WAIT_ENABLE_NOTIFICATIONS;
                 } else {
                     // configuration failed for some reason, so disconnect
+                    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                     gap_disconnect(peri->con_handle);
                     handset.con_state = CON_STATE_WAIT_DISCONNECT;
                     handset.disconnect_reason = DISCONNECT_REASON_CONFIGURE_CHARACTERISTIC_FAILED;
@@ -419,6 +420,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     if (rsp_flags & PBDRV_BLUETOOTH_AD_MATCH_NAME_FAILED) {
                         // A name was requested but it doesn't match, so go back to scanning stage.
                         handset.con_state = CON_STATE_WAIT_ADV_IND;
+                        pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                         break;
                     }
 
@@ -780,8 +782,6 @@ static PT_THREAD(peripheral_scan_and_connect_task(struct pt *pt, pbio_task_t *ta
         PT_WAIT_UNTIL(pt, pybricks_con_handle == HCI_CON_HANDLE_INVALID);
     }
 
-    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
-
     // active scanning to get scan response data.
     // scan interval: 48 * 0.625ms = 30ms
     gap_set_scan_params(1, 0x30, 0x30, 0);
@@ -832,6 +832,7 @@ static PT_THREAD(periperal_discover_characteristic_task(struct pt *pt, pbio_task
     PT_BEGIN(pt);
 
     if (handset.con_state != CON_STATE_CONNECTED) {
+        pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
         task->status = PBIO_ERROR_FAILED;
         PT_EXIT(pt);
     }
@@ -846,6 +847,7 @@ static PT_THREAD(periperal_discover_characteristic_task(struct pt *pt, pbio_task
 
     if (handset.btstack_error != ERROR_CODE_SUCCESS) {
         // configuration failed for some reason, so disconnect
+        pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
         gap_disconnect(peri->con_handle);
         handset.con_state = CON_STATE_WAIT_DISCONNECT;
         handset.disconnect_reason = DISCONNECT_REASON_DISCOVER_CHARACTERISTIC_FAILED;
@@ -859,6 +861,7 @@ static PT_THREAD(periperal_discover_characteristic_task(struct pt *pt, pbio_task
         // if there is any error while enumerating
         // attributes, con_state will be set to CON_STATE_NONE
         if (handset.con_state == CON_STATE_NONE) {
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             task->status = PBIO_ERROR_FAILED;
             PT_EXIT(pt);
         }
@@ -906,6 +909,7 @@ static PT_THREAD(periperal_read_characteristic_task(struct pt *pt, pbio_task_t *
     PT_BEGIN(pt);
 
     if (handset.con_state != CON_STATE_CONNECTED) {
+        pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
         task->status = PBIO_ERROR_FAILED;
         PT_EXIT(pt);
     }
@@ -919,6 +923,7 @@ static PT_THREAD(periperal_read_characteristic_task(struct pt *pt, pbio_task_t *
         handset.con_state = CON_STATE_WAIT_READ_CHARACTERISTIC;
     } else {
         // configuration failed for some reason, so disconnect
+        pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
         gap_disconnect(peri->con_handle);
         handset.con_state = CON_STATE_WAIT_DISCONNECT;
         handset.disconnect_reason = DISCONNECT_REASON_DISCOVER_CHARACTERISTIC_FAILED;
@@ -931,6 +936,7 @@ static PT_THREAD(periperal_read_characteristic_task(struct pt *pt, pbio_task_t *
 
         // if there is any error while reading, con_state will be set to CON_STATE_NONE
         if (handset.con_state == CON_STATE_NONE) {
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             task->status = PBIO_ERROR_FAILED;
             PT_EXIT(pt);
         }
@@ -975,6 +981,7 @@ static PT_THREAD(peripheral_write_task(struct pt *pt, pbio_task_t *task)) {
         peri->con_handle, pbio_get_uint16_le(value->handle), value->size, value->data);
 
     if (err != ERROR_CODE_SUCCESS) {
+        pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
         task->status = PBIO_ERROR_FAILED;
         PT_EXIT(pt);
     }
