@@ -548,6 +548,9 @@ restart_scan:
 
     peri->status = read_buf[8]; // debug
 
+    uint8_t failure_flag = 1;
+    pbsys_storage_set_user_data(6, &failure_flag, 1);
+
     if (peri->status != bleSUCCESS) {
         task->status = ble_error_to_pbio_error(peri->status);
         goto out;
