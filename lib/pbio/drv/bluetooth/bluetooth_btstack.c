@@ -315,6 +315,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
 
         case GATT_EVENT_NOTIFICATION: {
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             if (gatt_event_notification_get_handle(packet) != peri->con_handle) {
                 break;
             }
