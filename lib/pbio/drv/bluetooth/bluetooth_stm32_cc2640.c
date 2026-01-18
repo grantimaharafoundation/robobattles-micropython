@@ -548,8 +548,7 @@ restart_scan:
 
     peri->status = read_buf[8]; // debug
 
-    uint8_t failure_flag = 1;
-    pbsys_storage_set_user_data(6, &failure_flag, 1);
+    pbsys_storage_set_user_data(6, 1, 1);
 
     if (peri->status != bleSUCCESS) {
         task->status = ble_error_to_pbio_error(peri->status);
@@ -593,8 +592,7 @@ try_again:
         // here because the scan response failed the last time. It probably
         // won't match now and we should try a different device.
         if (adv_flags & PBDRV_BLUETOOTH_AD_MATCH_ADDRESS) {
-            uint8_t failure_flag = 1;
-            pbsys_storage_set_user_data(6, &failure_flag, 1);
+            pbsys_storage_set_user_data(6, 1, 1);
             goto try_again;
         }
 
@@ -669,8 +667,7 @@ try_again:
 
     PT_WAIT_WHILE(pt, write_xfer_size);
     GAP_EstablishLinkReq(0, 0, peri->bdaddr_type, peri->bdaddr);
-    uint8_t failure_flag = 1;
-    pbsys_storage_set_user_data(6, &failure_flag, 1);
+    pbsys_storage_set_user_data(6, 1, 1);
     PT_WAIT_UNTIL(pt, hci_command_status);
 
     peri->status = read_buf[8]; // debug
@@ -696,8 +693,7 @@ try_again:
         DEBUG_PRINT_PT(pt, "Auth complete: 0x%02x\n", bond_auth_err);
 
         if (bond_auth_err != 0) {
-            uint8_t failure_flag = 1;
-            pbsys_storage_set_user_data(6, &failure_flag, 1);
+            pbsys_storage_set_user_data(6, 1, 1);
             if (bond_auth_err == bleInvalidEventId) {
                 // Pairing rejected by peripheral. This can happen if the
                 // peripheral has been connected with a different device before
@@ -1707,8 +1703,7 @@ static void handle_event(uint8_t *packet) {
                     break;
 
                 case GAP_LINK_TERMINATED: {
-                    uint8_t failure_flag = 1;
-                    pbsys_storage_set_user_data(6, &failure_flag, 1);
+                    pbsys_storage_set_user_data(6, 1, 1);
                     DBG("bye: %04x", connection_handle);
                     if (conn_handle == connection_handle) {
                         conn_handle = NO_CONNECTION;
