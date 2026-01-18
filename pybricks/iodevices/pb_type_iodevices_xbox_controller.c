@@ -384,6 +384,10 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         pb_module_tools_pbio_task_do_blocking(&xbox->task, -1);
         nlr_pop();
     } else {
+        // Set connection failure flag.
+        uint8_t failure_flag = 1;
+        pbsys_storage_set_user_data(6, &failure_flag, 1);
+
         if (xbox->task.status == PBIO_ERROR_INVALID_OP) {
             mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT(
                 "Failed to pair. Disconnect the hub from the computer "

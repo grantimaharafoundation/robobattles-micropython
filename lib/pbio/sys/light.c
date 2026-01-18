@@ -17,6 +17,7 @@
 #include <pbio/util.h>
 #include <pbsys/config.h>
 #include <pbsys/status.h>
+#include <pbsys/storage.h>
 
 #include "../src/light/color_light.h"
 
@@ -230,6 +231,12 @@ static uint8_t animation_progress;
 static uint32_t default_user_program_light_animation_next(pbio_light_animation_t *animation) {
     pbio_color_hsv_t hsv;
     pbio_color_to_hsv(PBIO_COLOR_WHITE, &hsv);
+
+    // Check for connection failure flag.
+    uint8_t *failure_flag;
+    if (pbsys_storage_get_user_data(6, &failure_flag, 1) == PBIO_SUCCESS && *failure_flag == 1) {
+        pbio_color_to_hsv(PBIO_COLOR_ORANGE, &hsv);
+    }
 
     // Mimic Xbox controller light patterns
     if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
