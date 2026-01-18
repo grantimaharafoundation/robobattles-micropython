@@ -369,8 +369,6 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         }
     }
 
-    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
-
     // Connect with bonding enabled. On some computers, the pairing step will
     // fail if the hub is still connected to Pybricks Code. Since it is unclear
     // which computer will have this problem, recommend to disconnect the hub
