@@ -328,7 +328,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
         case HCI_EVENT_LE_META:
             if (hci_event_le_meta_get_subevent_code(packet) != HCI_SUBEVENT_LE_CONNECTION_COMPLETE) {
-                pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                 break;
             }
 
@@ -357,6 +356,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     sm_request_pairing(peri->con_handle);
                     handset.con_state = CON_STATE_WAIT_BONDING;
                 } else {
+                    pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
                     handset.con_state = CON_STATE_CONNECTED;
                 }
             }
