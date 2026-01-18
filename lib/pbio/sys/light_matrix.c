@@ -35,10 +35,10 @@ pbio_light_matrix_t *pbsys_hub_light_matrix = &pbsys_hub_light_matrix_instance.l
 static pbio_error_t pbsys_hub_light_matrix_set_pixel(pbio_light_matrix_t *light_matrix, uint8_t row, uint8_t col, uint8_t brightness) {
     // REVISIT: currently hub light matrix is hard-coded as LED array at index 0
     // on all platforms
-    pbdrv_led_array_dev_t *array;
-    if (pbdrv_led_array_get_dev(0, &array) == PBIO_SUCCESS) {
-        return pbdrv_led_array_set_brightness(array, row * light_matrix->size + col, brightness);
-    }
+    // pbdrv_led_array_dev_t *array;
+    // if (pbdrv_led_array_get_dev(0, &array) == PBIO_SUCCESS) {
+    //     return pbdrv_led_array_set_brightness(array, row * light_matrix->size + col, brightness);
+    // }
 
     return PBIO_SUCCESS;
 }
@@ -126,11 +126,11 @@ static uint32_t pbsys_hub_light_matrix_user_program_animation_next(pbio_light_an
     if (pbdrv_led_array_get_dev(0, &array) == PBIO_SUCCESS) {
         for (size_t i = 0; i < PBIO_ARRAY_SIZE(indexes); i++) {
             // The pixels are spread equally across the pattern.
-            uint8_t offset = cycle + i * (UINT8_MAX / PBIO_ARRAY_SIZE(indexes));
-            uint8_t brightness = offset > 200 ? 0 : (offset < 100 ? offset : 200 - offset);
+            // uint8_t offset = cycle + i * (UINT8_MAX / PBIO_ARRAY_SIZE(indexes));
+            // uint8_t brightness = offset > 200 ? 0 : (offset < 100 ? offset : 200 - offset);
 
             // Set the brightness for this pixel
-            pbdrv_led_array_set_brightness(array, indexes[i], brightness);
+            // pbdrv_led_array_set_brightness(array, indexes[i], brightness);
         }
         // This increment controls the speed of the pattern
         cycle += 9;
