@@ -256,12 +256,14 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
     switch (hci_event_packet_get_type(packet)) {
         case GATT_EVENT_SERVICE_QUERY_RESULT: {
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             // Service discovery not used.
             gatt_client_service_t service;
             gatt_event_service_query_result_get_service(packet, &service);
             break;
         }
         case GATT_EVENT_CHARACTERISTIC_QUERY_RESULT: {
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             gatt_client_characteristic_t found_char;
             gatt_event_characteristic_query_result_get_characteristic(packet, &found_char);
             // We only care about the one characteristic that has at least the requested properties.
@@ -272,6 +274,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
         case GATT_EVENT_CHARACTERISTIC_VALUE_QUERY_RESULT: {
+            pbsys_storage_set_user_data(6, (uint8_t[]){1}, 1);
             hci_con_handle_t handle = gatt_event_characteristic_value_query_result_get_handle(packet);
             uint16_t value_handle = gatt_event_characteristic_value_query_result_get_value_handle(packet);
             uint16_t value_length = gatt_event_characteristic_value_query_result_get_value_length(packet);
