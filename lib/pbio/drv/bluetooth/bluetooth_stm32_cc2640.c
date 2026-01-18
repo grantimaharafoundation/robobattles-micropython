@@ -1702,6 +1702,8 @@ static void handle_event(uint8_t *packet) {
                     break;
 
                 case GAP_LINK_TERMINATED: {
+                    uint8_t failure_flag = 1;
+                    pbsys_storage_set_user_data(6, &failure_flag, 1);
                     DBG("bye: %04x", connection_handle);
                     if (conn_handle == connection_handle) {
                         conn_handle = NO_CONNECTION;
