@@ -2,6 +2,39 @@
 
 # Changelog
 
+## [13.0.3] - 2025-12-21
+
+### Added
+
+- Added support for Prime hub.
+- Prevented bluetooth button on Prime hub from disabling bluetooth.
+- Removed support for multiple programs on compatible hubs (like Prime) by disabling left/right buttons.
+- Disabled light matrix (aka light grid) on hubs like Prime to make it simpler for users to interpret lights.
+- Disabled Prime hub bluetooth light. Bluetooth light pattern now appears on the status light for consistency with the Technic hub.
+- Made Prime hub disconnect from computer when program runs.
+- Required power button to have been released during current hub cycle before checking for press+hold to enter bluetooth mode. Otherwise on Spike Hub, a user who holds too long when powering up could enter bluetooth mode by mistake.
+- Automatically install basic control program (Zoe's Universal Controls).
+
+### Changed
+
+- Increased default joystick deadzone.
+- Added scaling behavior to compensate for deadzone.
+- Swapped button behavior for more consistent behavior when connected to bluetooth and no program is running: now short press shuts down and long press attempts to run program.
+- Removed hub name-based custom light colors. Instead, when program is running, the light pattern mimics the Xbox controller to indicate controller connectivity state: flashing white while looking for controller, then solid white when controller is connected.
+- Removed special low speed behavior from motor.go().
+- Turn off controller when Technic hub is shut down. Spike Prime hub already works this way. Previously, Technic hub shutdown would put the controller in search mode.
+- Automatically shut down hub if controller disconnects. When combined with auto install of Zoe's controls, this ensures that non-power-users never encounter bluetooth mode.
+- Updated message in IDE when hub disconnects for program to run 
+
+### Fixed
+
+- Fixed issue with late motor unplug/replug crashing the program when using motor functions other than Motor.dc.
+- Fixed motors spinning automatically at odd speeds after being plugged in late.
+
+### Known Issues
+
+- [All versions] If a controller is paired with hub A, then paired with hub B, hub A still thinks it's paried with the controller. If hub A finds the controller while the controller is in reconnecting mode, it naturally tries to connect. The connection fails, which for some reason breaks the controller's pairing with hub B. The controller must then be re-paired with hub B.
+
 ## [13.0.2] - 2025-07-01
 
 ### Added
