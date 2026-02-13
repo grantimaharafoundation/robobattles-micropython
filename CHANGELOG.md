@@ -8,7 +8,7 @@
 
 - Allowed A and B buttons to control motors in default control program, for compatibility with adaptive controllers
 
-## [13.0.3] - 2025-12-21
+## [13.0.3] - 2026-1-21
 
 ### Added
 
