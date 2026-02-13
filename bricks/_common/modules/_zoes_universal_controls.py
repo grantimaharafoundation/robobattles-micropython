@@ -14,7 +14,20 @@ while True:
     compWL = controller.triggers()[0]
     compWR = controller.triggers()[1]
 
-    # Accept button presses for use with adaptive controller
+    # Accept D-Pad for drive motor control to support adaptive controllers
+    if Button.LEFT in controller.buttons.pressed():
+        compX -= 100
+
+    if Button.RIGHT in controller.buttons.pressed():
+        compX += 100
+
+    if Button.UP in controller.buttons.pressed():
+        compY += 100
+
+    if Button.DOWN in controller.buttons.pressed():
+        compY += 100
+
+    # Accept buttons for weapon motor control to support adaptive controller
     if Button.B in controller.buttons.pressed():
         compWR += 100
         

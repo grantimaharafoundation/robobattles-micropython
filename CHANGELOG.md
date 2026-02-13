@@ -6,7 +6,7 @@
 
 ### Added
 
-- Allowed A and B buttons to control motors in default control program, for compatibility with adaptive controllers
+- Modified default control program for compatibility with adaptive controllers. Supports D-Pad for drive motor control, and A and B buttons for weapon motor control.
 
 ## [13.0.3] - 2026-1-21
 
