@@ -2,6 +2,12 @@
 
 # Changelog
 
+## [13.0.4] - 2026-2-13
+
+### Added
+
+- Allowed A and B buttons to control motors in default control program, for compatibility with adaptive controllers
+
 ## [13.0.3] - 2025-12-21
 
 ### Added

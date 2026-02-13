@@ -14,6 +14,13 @@ while True:
     compWL = controller.triggers()[0]
     compWR = controller.triggers()[1]
 
+    # Accept button presses for use with adaptive controller
+    if Button.B in controller.buttons.pressed():
+        compWR += 100
+        
+    if Button.A in controller.buttons.pressed():
+        compWL += 100
+
     # Reduce left/right input for slower turning to make bot easier to control
     compX /= 3
 
