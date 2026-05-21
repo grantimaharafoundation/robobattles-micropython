@@ -29,7 +29,6 @@
 #include "light_matrix.h"
 #include "light.h"
 
-#define POWER_BUTTON_LONG_PRESS_MS (2000)
 #define POWER_BUTTON_DOUBLE_PRESS_MS (500)
 
 static struct pt update_program_run_button_wait_state_pt;
@@ -140,23 +139,15 @@ void pbsys_hmi_poll(void) {
     // Bluetooth is always "on." "Bluetooth mode" (blinking light) just means a program is not running.
 
     if (pbio_button_is_pressed(&btn) == PBIO_SUCCESS) {
-        bool program_running = pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING);
-
-        if (!program_running) {
-            pbsys_main_set_hub_controller_pairing_mode(false);
-        }
-
-        bool power_button_pressed = btn & PBIO_BUTTON_CENTER;
-
-        if (power_button_pressed) {
+        if (btn & PBIO_BUTTON_CENTER) {
             pbsys_status_set(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
             update_program_run_button_wait_state(true);
 
             // Take action when button is held down for 2 seconds, but not if it's still being held from power-on press
-            if (power_button_released_this_cycle && pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, POWER_BUTTON_LONG_PRESS_MS)) {
+            if (power_button_released_this_cycle && pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
                 // Long press completed
                 if (!long_pressed) {
-                    if (program_running) {
+                    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
                         // Explicitly allow pairing-mode controllers.
                         pbsys_main_set_hub_controller_pairing_mode(true);
                     }
@@ -166,7 +157,6 @@ void pbsys_hmi_poll(void) {
         } else {
             pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
             update_program_run_button_wait_state(false);
-
             long_pressed = false;
             power_button_released_this_cycle = true;
         }
