@@ -12,6 +12,7 @@
 
 #include <contiki.h>
 
+#include <pbdrv/clock.h>
 #include <pbdrv/core.h>
 #include <pbdrv/reset.h>
 #include <pbdrv/led.h>
@@ -28,7 +29,8 @@
 #include "light_matrix.h"
 #include "light.h"
 
-static struct pt update_program_run_button_wait_state_pt;
+#define POWER_BUTTON_LONG_PRESS_MS (2000)
+#define POWER_BUTTON_DOUBLE_TAP_MS (500)
 
 // The selected slot is not persistent across reboot, so that the first slot
 // is always active on boot. This allows consistently starting programs without
@@ -41,31 +43,39 @@ static bool long_pressed = false;
 // Power button has been released at some point during this hub cycle.
 static bool power_button_released_this_cycle = false;
 
-/**
- * Protothread to monitor the button state to trigger starting the user program.
- * @param [in]  button_pressed      The current button state.
- */
-static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
-    struct pt *pt = &update_program_run_button_wait_state_pt;
+// Current button press tracking for short press, double tap, and long press.
+static bool power_button_was_pressed = false;
+static bool power_button_press_started_after_release = false;
 
-    // This should not be active if a long press has happened
-    if (long_pressed) {
-        PT_EXIT(pt);
+// First tap waiting to see if it becomes a double tap.
+static bool power_button_tap_pending = false;
+static uint32_t power_button_tap_pending_time;
+
+static void pbsys_hmi_handle_power_button_tap(uint32_t now) {
+    if (power_button_tap_pending && now - power_button_tap_pending_time <= POWER_BUTTON_DOUBLE_TAP_MS) {
+        power_button_tap_pending = false;
+        pbsys_status_set_controller_pairing_mode(false);
+
+        // Double tap enters computer/Bluetooth mode by stopping the program.
+        if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+            #if PBSYS_CONFIG_PROGRAM_STOP
+            pbsys_program_stop(false);
+            #endif
+        }
+        return;
     }
 
-    PT_BEGIN(pt);
+    power_button_tap_pending = true;
+    power_button_tap_pending_time = now;
+}
 
-    for (;;) {
-        // button may still be pressed from power on or user program stop
-        PT_WAIT_UNTIL(pt, !button_pressed);
-        PT_WAIT_UNTIL(pt, button_pressed);
-        PT_WAIT_UNTIL(pt, !button_pressed);
-
-        // Short press completed
-        pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+static void pbsys_hmi_handle_power_button_tap_timeout(uint32_t now) {
+    if (!power_button_tap_pending || now - power_button_tap_pending_time <= POWER_BUTTON_DOUBLE_TAP_MS) {
+        return;
     }
 
-    PT_END(pt);
+    power_button_tap_pending = false;
+    pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
 }
 
 #if PBSYS_CONFIG_HMI_NUM_SLOTS
@@ -84,7 +94,6 @@ uint8_t pbsys_hmi_get_selected_program_slot(void) {
 void pbsys_hmi_init(void) {
     pbsys_status_light_init();
     pbsys_hub_light_matrix_init();
-    PT_INIT(&update_program_run_button_wait_state_pt);
 }
 
 void pbsys_hmi_handle_event(process_event_t event, process_data_t data) {
@@ -111,23 +120,38 @@ void pbsys_hmi_handle_event(process_event_t event, process_data_t data) {
  */
 void pbsys_hmi_poll(void) {
     pbio_button_flags_t btn;
+    uint32_t now = pbdrv_clock_get_ms();
 
     // Bluetooth is always "on." "Bluetooth mode" (blinking light) just means a program is not running.
 
     if (pbio_button_is_pressed(&btn) == PBIO_SUCCESS) {
-        if (btn & PBIO_BUTTON_CENTER) {
+        bool program_running = pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING);
+
+        if (!program_running) {
+            pbsys_status_set_controller_pairing_mode(false);
+        }
+
+        bool power_button_pressed = btn & PBIO_BUTTON_CENTER;
+
+        if (power_button_pressed) {
+            if (!power_button_was_pressed) {
+                // Ignore a press already held during power-on; only presses
+                // that begin after a release can count as taps or long presses.
+                power_button_press_started_after_release = power_button_released_this_cycle;
+                power_button_was_pressed = true;
+            }
+
             pbsys_status_set(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
-            update_program_run_button_wait_state(true);
 
             // Take action when button is held down for 2 seconds, but not if it's still being held from power-on press
-            if (power_button_released_this_cycle && pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
+            if (power_button_press_started_after_release && pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, POWER_BUTTON_LONG_PRESS_MS)) {
                 // Long press completed
                 if (!long_pressed) {
-                    // Stop program if currently running. This puts hub in bluetooth mode.
-                    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
-                        #if PBSYS_CONFIG_PROGRAM_STOP
-                        pbsys_program_stop(false);
-                        #endif
+                    power_button_tap_pending = false;
+
+                    if (program_running) {
+                        // Explicitly allow pairing-mode controllers.
+                        pbsys_status_set_controller_pairing_mode(true);
                     } else {
                         // Attempt to start program if not currently running
                         pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
@@ -136,8 +160,15 @@ void pbsys_hmi_poll(void) {
                 long_pressed = true;
             }
         } else {
+            if (power_button_was_pressed && power_button_press_started_after_release && !long_pressed) {
+                pbsys_hmi_handle_power_button_tap(now);
+            }
+
             pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
-            update_program_run_button_wait_state(false);
+            pbsys_hmi_handle_power_button_tap_timeout(now);
+
+            power_button_was_pressed = false;
+            power_button_press_started_after_release = false;
             long_pressed = false;
             power_button_released_this_cycle = true;
         }

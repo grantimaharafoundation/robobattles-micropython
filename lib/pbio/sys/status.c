@@ -20,6 +20,8 @@ static struct {
     uint32_t changed_time[NUM_PBIO_PYBRICKS_STATUS];
     /** Currently active program identifier, if it is running according to the flags. */
     pbio_pybricks_user_program_id_t program_id;
+    /** Hub is explicitly accepting pairing-mode controllers. */
+    bool controller_pairing_mode;
 } pbsys_status;
 
 static void pbsys_status_update_flag(pbio_pybricks_status_t status, bool set) {
@@ -104,6 +106,14 @@ bool pbsys_status_test_debounce(pbio_pybricks_status_t status, bool state, uint3
         return false;
     }
     return pbdrv_clock_get_ms() - pbsys_status.changed_time[status] >= ms;
+}
+
+void pbsys_status_set_controller_pairing_mode(bool enabled) {
+    pbsys_status.controller_pairing_mode = enabled;
+}
+
+bool pbsys_status_get_controller_pairing_mode(void) {
+    return pbsys_status.controller_pairing_mode;
 }
 
 /**

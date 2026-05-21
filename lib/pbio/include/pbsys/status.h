@@ -19,6 +19,8 @@ void pbsys_status_set(pbio_pybricks_status_t status);
 void pbsys_status_clear(pbio_pybricks_status_t status);
 bool pbsys_status_test(pbio_pybricks_status_t status);
 bool pbsys_status_test_debounce(pbio_pybricks_status_t status, bool state, uint32_t ms);
+void pbsys_status_set_controller_pairing_mode(bool enabled);
+bool pbsys_status_get_controller_pairing_mode(void);
 uint32_t pbsys_status_get_flags(void);
 uint32_t pbsys_status_get_status_report(uint8_t *buf);
 

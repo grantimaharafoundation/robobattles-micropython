@@ -104,10 +104,13 @@ static pbio_pybricks_error_t handle_notification(pbdrv_bluetooth_connection_t co
 
 #define _16BIT_AS_LE(x) ((x) & 0xff), (((x) >> 8) & 0xff)
 
-static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_matches(uint8_t event_type, const uint8_t *data, const char *name, const uint8_t *addr, const uint8_t *match_addr) {
+typedef enum {
+    XBOX_ADVERTISEMENT_NONE,
+    XBOX_ADVERTISEMENT_PAIRING,
+    XBOX_ADVERTISEMENT_CONNECTION,
+} xbox_advertisement_mode_t;
 
-    // The controller seems to advertise three different packets, so allow all.
-
+static xbox_advertisement_mode_t xbox_get_advertisement_mode(const uint8_t *data) {
     const uint8_t advertising_data1[] = {
         // Type field for BLE-enabled.
         0x02, PBDRV_BLUETOOTH_AD_DATA_TYPE_FLAGS, 0x06,
@@ -125,7 +128,7 @@ static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_matches(uint8_
         // Type field for appearance (HID Gamepad)
         0x03, PBDRV_BLUETOOTH_AD_DATA_TYPE_APPEARANCE, _16BIT_AS_LE(964),
         // Type field for manufacturer data (Microsoft).
-        0x04, PBDRV_BLUETOOTH_AD_DATA_TYPE_MANUFACTURER_DATA, 06, 00, 00,
+        0x04, PBDRV_BLUETOOTH_AD_DATA_TYPE_MANUFACTURER_DATA, 0x06, 0x00, 0x00,
         // List of UUIDs (HID BLE Service)
         0x03, PBDRV_BLUETOOTH_AD_DATA_TYPE_16_BIT_SERV_UUID_COMPLETE_LIST, _16BIT_AS_LE(0x1812),
     };
@@ -138,11 +141,36 @@ static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_matches(uint8_
     memcpy(advertising_data3, advertising_data2, sizeof(advertising_data2));
     advertising_data3[2] = 0x04;
 
-    // Exit if neither of the expected values match.
-    if (memcmp(data, advertising_data1, sizeof(advertising_data1)) &&
-        memcmp(data, advertising_data2, sizeof(advertising_data2)) &&
-        // Additional check to require match for last stored address
-        (memcmp(data, advertising_data3, sizeof(advertising_data3)) || !s_target_addr_valid || memcmp(addr, s_target_or_connected_addr, 6) != 0)) {
+    if (memcmp(data, advertising_data1, sizeof(advertising_data1)) == 0 ||
+        memcmp(data, advertising_data2, sizeof(advertising_data2)) == 0) {
+        return XBOX_ADVERTISEMENT_PAIRING;
+    }
+
+    if (memcmp(data, advertising_data3, sizeof(advertising_data3)) == 0) {
+        return XBOX_ADVERTISEMENT_CONNECTION;
+    }
+
+    return XBOX_ADVERTISEMENT_NONE;
+}
+
+static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_matches(uint8_t event_type, const uint8_t *data, const char *name, const uint8_t *addr, const uint8_t *match_addr) {
+
+    // The controller has distinct pairing and reconnecting advertisements.
+    // The hub-side mode determines which kind is eligible.
+
+    xbox_advertisement_mode_t advertisement_mode = xbox_get_advertisement_mode(data);
+    bool hub_pairing_mode = pbsys_status_get_controller_pairing_mode();
+    bool stored_address_matches = s_target_addr_valid && memcmp(addr, s_target_or_connected_addr, 6) == 0;
+
+    if (advertisement_mode == XBOX_ADVERTISEMENT_NONE) {
+        return PBDRV_BLUETOOTH_AD_MATCH_NONE;
+    }
+
+    if (hub_pairing_mode) {
+        if (advertisement_mode != XBOX_ADVERTISEMENT_PAIRING) {
+            return PBDRV_BLUETOOTH_AD_MATCH_NONE;
+        }
+    } else if (advertisement_mode != XBOX_ADVERTISEMENT_CONNECTION || !stored_address_matches) {
         return PBDRV_BLUETOOTH_AD_MATCH_NONE;
     }
 
@@ -331,6 +359,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
     // we are using static memory
     memset(&xbox->state, 0, sizeof(xbox_input_map_t));
     xbox->state.x = xbox->state.y = xbox->state.z = xbox->state.rz = INT16_MAX;
+    pbsys_status_set_controller_pairing_mode(false);
 
     // Xbox Controller requires pairing.
     pbdrv_bluetooth_peripheral_options_t options = PBDRV_BLUETOOTH_PERIPHERAL_OPTIONS_PAIR;
@@ -355,6 +384,8 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
     // Get stored address of controller to connect to
     uint8_t initial_stored_addr[6] = {0};
     uint8_t *stored_addr_ptr;
+    s_target_addr_valid = false;
+    s_connected_addr_valid = false;
 
     // Read from user_data at offset 0, for 6 bytes.
     if (pbsys_storage_get_user_data(0, &stored_addr_ptr, 6) == PBIO_SUCCESS) {
@@ -384,6 +415,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         pb_module_tools_pbio_task_do_blocking(&xbox->task, -1);
         nlr_pop();
     } else {
+        pbsys_status_set_controller_pairing_mode(false);
         if (xbox->task.status == PBIO_ERROR_INVALID_OP) {
             mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT(
                 "Failed to pair. Disconnect the hub from the computer "
@@ -393,6 +425,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         nlr_jump(nlr.ret_val);
     }
     DEBUG_PRINT("Connected to XBOX controller.\n");
+    pbsys_status_set_controller_pairing_mode(false);
 
     // If the controller was most recently connected to another device like the
     // actual Xbox or a phone, the controller needs to be not just turned on,

@@ -255,8 +255,9 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
             hsv.v = 0;
         }
 
-        // This increment controls the speed of the pattern and wraps on completion
-        animation_progress = (animation_progress + 1) % total_ticks;
+        // Pairing mode uses the same white pulse, but twice as fast.
+        uint8_t animation_step = pbsys_status_get_controller_pairing_mode() ? 2 : 1;
+        animation_progress = (animation_progress + animation_step) % total_ticks;
     } else {
         // Controller connected. Solid white connected animation.
         hsv.v = 100;
