@@ -9,9 +9,16 @@
 #include <stdbool.h>
 
 #include <pbdrv/watchdog.h>
+#include <pbio/config.h>
 #include <pbsys/status.h>
 
 #include <pbdrv/bluetooth.h>
+
+#if PBIO_CONFIG_HUB_TECHNIC_HUB
+#include <pbdrv/reset.h>
+
+#define SHUTDOWN_REQUEST_FALLBACK_MS (10000)
+#endif
 
 /**
  * Polls the system supervisor.
@@ -33,4 +40,11 @@ void pbsys_supervisor_poll(void) {
     if (low_battery_shutdown || idle_shutdown) {
         pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
     }
+
+    #if PBIO_CONFIG_HUB_TECHNIC_HUB
+    if (!pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN) &&
+        pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST, true, SHUTDOWN_REQUEST_FALLBACK_MS)) {
+        pbdrv_reset(PBDRV_RESET_ACTION_POWER_OFF);
+    }
+    #endif
 }

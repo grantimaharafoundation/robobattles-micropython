@@ -540,6 +540,13 @@ void TIM2_IRQHandler(void) {
 // Reset
 
 void pbdrv_reset_power_off(void) {
+    GPIO_InitTypeDef gpio_init = { };
+    gpio_init.Pin = GPIO_PIN_12;
+    gpio_init.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_init.Pull = GPIO_NOPULL;
+    gpio_init.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOC, &gpio_init);
+
     // setting PC12 low cuts the power
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);
 }
