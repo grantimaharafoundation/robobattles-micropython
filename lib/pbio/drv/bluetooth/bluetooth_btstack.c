@@ -998,9 +998,10 @@ void pbdrv_bluetooth_peripheral_write(pbio_task_t *task, pbdrv_bluetooth_value_t
 }
 
 static PT_THREAD(peripheral_disconnect_task(struct pt *pt, pbio_task_t *task)) {
+    pbdrv_bluetooth_peripheral_t *peri = &peripheral_singleton;
+
     PT_BEGIN(pt);
 
-    pbdrv_bluetooth_peripheral_t *peri = &peripheral_singleton;
     if (peri->con_handle != HCI_CON_HANDLE_INVALID) {
         gap_disconnect(peri->con_handle);
     }
