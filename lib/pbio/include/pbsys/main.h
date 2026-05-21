@@ -76,7 +76,19 @@ pbsys_main_program_start_request_type_t pbsys_main_program_get_start_request_typ
 
 pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id, pbsys_main_program_start_request_type_t start_request_type);
 
+/**
+ * Sets whether the hub should allow pairing with a controller.
+ *
+ * @param [in]  enabled Whether the hub should accept controllers in pairing mode. If false, only reconnections are allowed.
+ */
 void pbsys_main_set_hub_controller_pairing_mode(bool enabled);
+
+/**
+ * Gets whether the hub is allowing pairing with a controller.
+ *
+ * @returns             *true* if controllers in pairing mode are accepted,
+ *                      *false* if controllers in reconnection mode are accepted
+ */
 bool pbsys_main_get_hub_controller_pairing_mode(void);
 
 /**

@@ -256,7 +256,8 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
             hsv.v = 0;
         }
 
-        // Pairing mode uses the same white pulse, but faster.
+        // This increment controls the speed of the pattern and wraps on completion.
+        // In pairing mode, flash faster.
         uint8_t animation_step = pbsys_main_get_hub_controller_pairing_mode() ? 3 : 1;
         animation_progress = (animation_progress + animation_step) % total_ticks;
     } else {

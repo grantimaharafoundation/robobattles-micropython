@@ -27,6 +27,8 @@
 
 // Singleton with information about the currently (or soon) active program.
 static pbsys_main_program_t program;
+
+// Whether the hub is in controller pairing mode, as opposed to controller reconnection mode.
 static bool hub_controller_pairing_mode;
 
 /**
@@ -49,10 +51,21 @@ pbsys_main_program_start_request_type_t pbsys_main_program_get_start_request_typ
     return program.start_request_type;
 }
 
+/**
+ * Sets whether the hub should allow pairing with a controller.
+ *
+ * @param [in]  enabled Whether the hub should accept controllers in pairing mode.
+ */
 void pbsys_main_set_hub_controller_pairing_mode(bool enabled) {
     hub_controller_pairing_mode = enabled;
 }
 
+/**
+ * Gets whether the hub is allowing pairing with a controller.
+ *
+ * @returns     *true* if controllers in pairing mode are accepted, otherwise
+ *              *false*.
+ */
 bool pbsys_main_get_hub_controller_pairing_mode(void) {
     return hub_controller_pairing_mode;
 }
