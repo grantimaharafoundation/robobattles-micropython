@@ -226,14 +226,35 @@ static void pbsys_status_light_handle_status_change(void) {
 }
 
 #if PBSYS_CONFIG_STATUS_LIGHT_STATE_ANIMATIONS
+#define CONTROLLER_RECONNECTED_EXTRA_ANIMATION_CYCLES (1)
+#define CONTROLLER_PAIRED_EXTRA_ANIMATION_CYCLES (2)
+
 static uint8_t animation_progress;
+static uint8_t controller_connected_animation_cycles_remaining;
+static uint8_t controller_connected_animation_step;
+static bool controller_connection_started_in_pairing_mode;
+static bool controller_was_connected;
 
 static uint32_t default_user_program_light_animation_next(pbio_light_animation_t *animation) {
     pbio_color_hsv_t hsv;
     pbio_color_to_hsv(PBIO_COLOR_WHITE, &hsv);
 
+    bool controller_connected = pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL);
+    bool hub_controller_pairing_mode = pbsys_main_get_hub_controller_pairing_mode();
+    if (!controller_connected) {
+        controller_was_connected = false;
+        controller_connected_animation_cycles_remaining = 0;
+        controller_connection_started_in_pairing_mode = hub_controller_pairing_mode;
+    } else if (!controller_was_connected) {
+        controller_was_connected = true;
+        controller_connected_animation_cycles_remaining = (controller_connection_started_in_pairing_mode ?
+            CONTROLLER_PAIRED_EXTRA_ANIMATION_CYCLES :
+            CONTROLLER_RECONNECTED_EXTRA_ANIMATION_CYCLES) + (animation_progress ? 1 : 0);
+        controller_connected_animation_step = controller_connection_started_in_pairing_mode ? 3 : 1;
+    }
+
     // Mimic Xbox controller light patterns
-    if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_PERIPHERAL)) {
+    if (!controller_connected || controller_connected_animation_cycles_remaining) {
         // Controller not connected. Flashing white search animation. Durations in 1/60ths of a second.
         const uint8_t fade_up_ticks = 8;
         const uint8_t on_ticks = 29;
@@ -258,8 +279,12 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
 
         // This increment controls the speed of the pattern and wraps on completion.
         // In pairing mode, flash faster.
-        uint8_t animation_step = pbsys_main_get_hub_controller_pairing_mode() ? 3 : 1;
-        animation_progress = (animation_progress + animation_step) % total_ticks;
+        uint8_t animation_step = controller_connected ? controller_connected_animation_step : (hub_controller_pairing_mode ? 3 : 1);
+        uint8_t next_animation_progress = (animation_progress + animation_step) % total_ticks;
+        if (controller_connected && next_animation_progress < animation_progress) {
+            controller_connected_animation_cycles_remaining--;
+        }
+        animation_progress = next_animation_progress;
     } else {
         // Controller connected. Solid white connected animation.
         hsv.v = 100;
@@ -279,6 +304,10 @@ void pbsys_status_light_handle_event(process_event_t event, process_data_t data)
     if (event == PBIO_EVENT_STATUS_SET && (pbio_pybricks_status_t)(intptr_t)data == PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) {
         #if PBSYS_CONFIG_STATUS_LIGHT_STATE_ANIMATIONS
         animation_progress = 0;
+        controller_was_connected = false;
+        controller_connection_started_in_pairing_mode = false;
+        controller_connected_animation_step = 1;
+        controller_connected_animation_cycles_remaining = 0;
         pbio_light_animation_init(&pbsys_status_light_main->animation, default_user_program_light_animation_next);
         pbio_light_animation_start(&pbsys_status_light_main->animation);
         #else
