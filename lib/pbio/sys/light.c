@@ -255,7 +255,7 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
             hsv.v = 0;
         }
 
-        // Pairing mode uses the same white pulse, but twice as fast.
+        // Pairing mode uses the same white pulse, but faster.
         uint8_t animation_step = pbsys_status_get_controller_pairing_mode() ? 3 : 1;
         animation_progress = (animation_progress + animation_step) % total_ticks;
     } else {
