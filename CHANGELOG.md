@@ -6,7 +6,8 @@
 
 ### Added
 
-- Added controller pairing mode to hub. A controller in pairing mode will now only pair with a hub if it is in pairing mode. To enter pairing mode, turn on the hub, then press and hold the power button until the light starts pulsing quickly. 
+- Added controller pairing mode to hub. A controller in pairing mode will now only pair with a hub if it is in pairing mode. To enter pairing mode, turn on the hub, then press and hold the power button until the light starts pulsing quickly.
+- Attempted fix for issue where Technic hub light is rapidly flashing blue and power button is unresponsive, which can only be fixed by removing battery. 
 
 ### Changed
 
