@@ -16,6 +16,7 @@
 #include <pbio/light.h>
 #include <pbio/util.h>
 #include <pbsys/config.h>
+#include <pbsys/main.h>
 #include <pbsys/status.h>
 
 #include "../src/light/color_light.h"
@@ -256,7 +257,7 @@ static uint32_t default_user_program_light_animation_next(pbio_light_animation_t
         }
 
         // Pairing mode uses the same white pulse, but faster.
-        uint8_t animation_step = pbsys_status_get_controller_pairing_mode() ? 3 : 1;
+        uint8_t animation_step = pbsys_main_get_hub_controller_pairing_mode() ? 3 : 1;
         animation_progress = (animation_progress + animation_step) % total_ticks;
     } else {
         // Controller connected. Solid white connected animation.

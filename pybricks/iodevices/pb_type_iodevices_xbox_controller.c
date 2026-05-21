@@ -17,6 +17,7 @@
 #include <pbio/task.h>
 
 #include <pbsys/config.h>
+#include <pbsys/main.h>
 #include <pbsys/status.h>
 #include <pbsys/storage_settings.h>
 #include <pbsys/storage.h>
@@ -159,7 +160,7 @@ static pbdrv_bluetooth_ad_match_result_flags_t xbox_advertisement_matches(uint8_
     // The hub-side mode determines which kind is eligible.
 
     xbox_advertisement_mode_t advertisement_mode = xbox_get_advertisement_mode(data);
-    bool hub_pairing_mode = pbsys_status_get_controller_pairing_mode();
+    bool hub_pairing_mode = pbsys_main_get_hub_controller_pairing_mode();
     bool stored_address_matches = s_target_addr_valid && memcmp(addr, s_target_or_connected_addr, 6) == 0;
 
     if (advertisement_mode == XBOX_ADVERTISEMENT_NONE) {
@@ -359,7 +360,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
     // we are using static memory
     memset(&xbox->state, 0, sizeof(xbox_input_map_t));
     xbox->state.x = xbox->state.y = xbox->state.z = xbox->state.rz = INT16_MAX;
-    pbsys_status_set_controller_pairing_mode(false);
+    pbsys_main_set_hub_controller_pairing_mode(false);
 
     // Xbox Controller requires pairing.
     pbdrv_bluetooth_peripheral_options_t options = PBDRV_BLUETOOTH_PERIPHERAL_OPTIONS_PAIR;
@@ -415,7 +416,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         pb_module_tools_pbio_task_do_blocking(&xbox->task, -1);
         nlr_pop();
     } else {
-        pbsys_status_set_controller_pairing_mode(false);
+        pbsys_main_set_hub_controller_pairing_mode(false);
         if (xbox->task.status == PBIO_ERROR_INVALID_OP) {
             mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT(
                 "Failed to pair. Disconnect the hub from the computer "
@@ -425,7 +426,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
         nlr_jump(nlr.ret_val);
     }
     DEBUG_PRINT("Connected to XBOX controller.\n");
-    pbsys_status_set_controller_pairing_mode(false);
+    pbsys_main_set_hub_controller_pairing_mode(false);
 
     // If the controller was most recently connected to another device like the
     // actual Xbox or a phone, the controller needs to be not just turned on,

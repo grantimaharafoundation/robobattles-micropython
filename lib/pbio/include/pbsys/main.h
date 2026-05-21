@@ -76,6 +76,9 @@ pbsys_main_program_start_request_type_t pbsys_main_program_get_start_request_typ
 
 pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id, pbsys_main_program_start_request_type_t start_request_type);
 
+void pbsys_main_set_hub_controller_pairing_mode(bool enabled);
+bool pbsys_main_get_hub_controller_pairing_mode(void);
+
 /**
  * Validates the program that is being requested to start.
  *
@@ -131,6 +134,13 @@ static inline pbsys_main_program_start_request_type_t pbsys_main_program_get_sta
 
 static inline pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id, pbsys_main_program_start_request_type_t start_request_type) {
     return PBIO_ERROR_NOT_SUPPORTED;
+}
+
+static inline void pbsys_main_set_hub_controller_pairing_mode(bool enabled) {
+}
+
+static inline bool pbsys_main_get_hub_controller_pairing_mode(void) {
+    return false;
 }
 
 static inline pbio_error_t pbsys_main_program_validate(pbsys_main_program_t *program) {

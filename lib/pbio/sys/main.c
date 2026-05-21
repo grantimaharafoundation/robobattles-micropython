@@ -27,6 +27,7 @@
 
 // Singleton with information about the currently (or soon) active program.
 static pbsys_main_program_t program;
+static bool hub_controller_pairing_mode;
 
 /**
  * Checks if a start request has been made for the main program.
@@ -46,6 +47,14 @@ static bool pbsys_main_program_start_requested() {
  */
 pbsys_main_program_start_request_type_t pbsys_main_program_get_start_request_type(void) {
     return program.start_request_type;
+}
+
+void pbsys_main_set_hub_controller_pairing_mode(bool enabled) {
+    hub_controller_pairing_mode = enabled;
+}
+
+bool pbsys_main_get_hub_controller_pairing_mode(void) {
+    return hub_controller_pairing_mode;
 }
 
 /**

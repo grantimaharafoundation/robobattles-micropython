@@ -54,7 +54,7 @@ static uint32_t power_button_tap_pending_time;
 static void pbsys_hmi_handle_power_button_tap(uint32_t now) {
     if (power_button_tap_pending && now - power_button_tap_pending_time <= POWER_BUTTON_DOUBLE_TAP_MS) {
         power_button_tap_pending = false;
-        pbsys_status_set_controller_pairing_mode(false);
+        pbsys_main_set_hub_controller_pairing_mode(false);
 
         if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
             // Double tap enters computer/Bluetooth mode by stopping the program.
@@ -131,7 +131,7 @@ void pbsys_hmi_poll(void) {
         bool program_running = pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING);
 
         if (!program_running) {
-            pbsys_status_set_controller_pairing_mode(false);
+            pbsys_main_set_hub_controller_pairing_mode(false);
         }
 
         bool power_button_pressed = btn & PBIO_BUTTON_CENTER;
@@ -154,7 +154,7 @@ void pbsys_hmi_poll(void) {
 
                     if (program_running) {
                         // Explicitly allow pairing-mode controllers.
-                        pbsys_status_set_controller_pairing_mode(true);
+                        pbsys_main_set_hub_controller_pairing_mode(true);
                     }
                 }
                 long_pressed = true;
