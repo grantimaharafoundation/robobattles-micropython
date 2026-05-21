@@ -28,6 +28,8 @@
 #include "light_matrix.h"
 #include "light.h"
 
+#define POWER_BUTTON_DOUBLE_PRESS_MS (500)
+
 static struct pt update_program_run_button_wait_state_pt;
 
 // The selected slot is not persistent across reboot, so that the first slot
@@ -42,7 +44,7 @@ static bool long_pressed = false;
 static bool power_button_released_this_cycle = false;
 
 /**
- * Protothread to monitor the button state to trigger starting the user program.
+ * Protothread to monitor the button state to trigger short and double press actions.
  * @param [in]  button_pressed      The current button state.
  */
 static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
@@ -61,8 +63,25 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
         PT_WAIT_UNTIL(pt, button_pressed);
         PT_WAIT_UNTIL(pt, !button_pressed);
 
-        // Short press completed
-        pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+        PT_WAIT_UNTIL(pt, button_pressed || pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, false, POWER_BUTTON_DOUBLE_PRESS_MS));
+
+        if (!button_pressed) {
+            // Short press completed
+            pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+        } else {
+            PT_WAIT_UNTIL(pt, !button_pressed);
+
+            // Double press completed
+            pbsys_main_set_hub_controller_pairing_mode(false);
+
+            if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+                #if PBSYS_CONFIG_PROGRAM_STOP
+                pbsys_program_stop(false);
+                #endif
+            } else {
+                pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
+            }
+        }
     }
 
     PT_END(pt);
@@ -123,14 +142,9 @@ void pbsys_hmi_poll(void) {
             if (power_button_released_this_cycle && pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
                 // Long press completed
                 if (!long_pressed) {
-                    // Stop program if currently running. This puts hub in bluetooth mode.
                     if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
-                        #if PBSYS_CONFIG_PROGRAM_STOP
-                        pbsys_program_stop(false);
-                        #endif
-                    } else {
-                        // Attempt to start program if not currently running
-                        pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
+                        // Explicitly allow pairing-mode controllers.
+                        pbsys_main_set_hub_controller_pairing_mode(true);
                     }
                 }
                 long_pressed = true;
