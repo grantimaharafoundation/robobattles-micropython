@@ -1001,7 +1001,6 @@ static PT_THREAD(peripheral_disconnect_task(struct pt *pt, pbio_task_t *task)) {
     PT_BEGIN(pt);
 
     pbdrv_bluetooth_peripheral_t *peri = &peripheral_singleton;
-
     if (peri->con_handle != HCI_CON_HANDLE_INVALID) {
         gap_disconnect(peri->con_handle);
     }
