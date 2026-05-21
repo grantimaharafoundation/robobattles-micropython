@@ -2,6 +2,16 @@
 
 # Changelog
 
+## [13.0.5] - 2026-5-21
+
+### Added
+
+- Added controller pairing mode to hub. A controller in pairing mode will now only pair with a hub if it is in pairing mode. To enter pairing mode, turn on the hub, then press and hold the power button until the light starts pulsing quickly. 
+
+### Changed
+
+- When the hub is on, pressing and holding the power button now enters controller pairing mode instead of entering bluetooth mode. To enter or exit bluetooth mode, double tap the power button.
+
 ## [13.0.4] - 2026-2-13
 
 ### Added
