@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 #include <pbdrv/bluetooth.h>
+#include <pbdrv/clock.h>
 #include <pbio/button.h>
 #include <pbio/color.h>
 #include <pbio/error.h>
@@ -40,6 +41,12 @@
 #else
 #define DEBUG_PRINT(...)
 #endif
+
+#define XBOX_KEEPALIVE_MS (60 * 1000)
+#define XBOX_KEEPALIVE_POWER (1)
+#define XBOX_KEEPALIVE_DURATION_10MS (1)
+// REVISIT: Discover this handle dynamically.
+#define XBOX_RUMBLE_HANDLE (34)
 
 /**
  * The main HID Characteristic.
@@ -93,6 +100,7 @@ static pb_xbox_t pb_xbox_singleton;
 static uint8_t s_target_or_connected_addr[6];
 static bool s_target_addr_valid = false;
 static bool s_connected_addr_valid = false;
+static uint32_t s_keepalive_time;
 
 // Handles LEGO Wireless protocol messages from the XBOX Device.
 static pbio_pybricks_error_t handle_notification(pbdrv_bluetooth_connection_t connection, const uint8_t *value, uint32_t size) {
@@ -214,9 +222,12 @@ static void pb_xbox_discover_and_read(pbdrv_bluetooth_peripheral_char_t *char_in
     pb_module_tools_pbio_task_do_blocking(&xbox->task, -1);
 }
 
+static void pb_xbox_keepalive(void);
+
 static xbox_input_map_t *pb_xbox_get_buttons(void) {
     xbox_input_map_t *buttons = &pb_xbox_singleton.state;
     pb_xbox_assert_connected();
+    pb_xbox_keepalive();
     return buttons;
 }
 
@@ -405,6 +416,7 @@ static mp_obj_t pb_type_xbox_make_new(const mp_obj_type_t *type, size_t n_args, 
     }
     DEBUG_PRINT("Connected to XBOX controller.\n");
     pbsys_main_set_hub_controller_pairing_mode(false);
+    s_keepalive_time = pbdrv_clock_get_ms();
 
     // If the controller was most recently connected to another device like the
     // actual Xbox or a phone, the controller needs to be not just turned on,
@@ -561,6 +573,50 @@ typedef struct {
     uint8_t repetitions;
 } __attribute__((packed)) xbox_rumble_command_t;
 
+static void pb_xbox_start_rumble_write(pbio_task_t *task, const xbox_rumble_command_t *command) {
+    static struct {
+        pbdrv_bluetooth_value_t value;
+        char payload[sizeof(xbox_rumble_command_t)];
+    } __attribute__((packed)) msg = {
+    };
+    msg.value.size = sizeof(*command);
+    memcpy(msg.payload, command, sizeof(*command));
+    pbio_set_uint16_le(msg.value.handle, XBOX_RUMBLE_HANDLE);
+
+    pbdrv_bluetooth_peripheral_write(task, &msg.value);
+}
+
+static void pb_xbox_keepalive(void) {
+    uint32_t now = pbdrv_clock_get_ms();
+
+    if (now - s_keepalive_time < XBOX_KEEPALIVE_MS) {
+        return;
+    }
+
+    pb_xbox_t *xbox = &pb_xbox_singleton;
+    if (xbox->task.status == PBIO_ERROR_AGAIN) {
+        return;
+    }
+
+    s_keepalive_time = now;
+
+    // Experimental keepalive to test whether a tiny rumble write resets the
+    // controller's idle sleep timer.
+    xbox_rumble_command_t command = {
+        .activation_flags = 0x03,
+        .power_left_trigger = 0,
+        .power_right_trigger = 0,
+        .power_left_handle = XBOX_KEEPALIVE_POWER,
+        .power_right_handle = XBOX_KEEPALIVE_POWER,
+        .duration_10ms = XBOX_KEEPALIVE_DURATION_10MS,
+        .delay_10ms = 0,
+        .repetitions = 0,
+    };
+
+    pb_xbox_start_rumble_write(&xbox->task, &command);
+    pb_module_tools_pbio_task_do_blocking(&xbox->task, -1);
+}
+
 static mp_obj_t pb_xbox_rumble(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     PB_PARSE_ARGS_METHOD(n_args, pos_args, kw_args,
         pb_type_xbox_obj_t, self,
@@ -624,19 +680,7 @@ static mp_obj_t pb_xbox_rumble(size_t n_args, const mp_obj_t *pos_args, mp_map_t
         return mp_const_none;
     }
 
-    // REVISIT: Discover this handle dynamically.
-    const uint16_t handle = 34;
-
-    static struct {
-        pbdrv_bluetooth_value_t value;
-        char payload[sizeof(command)];
-    } __attribute__((packed)) msg = {
-    };
-    msg.value.size = sizeof(command);
-    memcpy(msg.payload, &command, sizeof(command));
-    pbio_set_uint16_le(msg.value.handle, handle);
-
-    pbdrv_bluetooth_peripheral_write(&xbox->task, &msg.value);
+    pb_xbox_start_rumble_write(&xbox->task, &command);
     return pb_module_tools_pbio_task_wait_or_await(&xbox->task);
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(pb_xbox_rumble_obj, 1, pb_xbox_rumble);
