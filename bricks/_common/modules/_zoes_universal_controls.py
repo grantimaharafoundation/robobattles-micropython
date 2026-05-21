@@ -30,7 +30,7 @@ while True:
     # Accept buttons for weapon motor control to support adaptive controller
     if Button.B in controller.buttons.pressed():
         compWR += 100
-        
+
     if Button.A in controller.buttons.pressed():
         compWL += 100
 
