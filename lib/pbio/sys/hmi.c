@@ -12,7 +12,6 @@
 
 #include <contiki.h>
 
-#include <pbdrv/clock.h>
 #include <pbdrv/core.h>
 #include <pbdrv/reset.h>
 #include <pbdrv/led.h>
@@ -44,9 +43,6 @@ static bool long_pressed = false;
 // Power button has been released at some point during this hub cycle.
 static bool power_button_released_this_cycle = false;
 
-// First completed short press time while waiting for a double press.
-static uint32_t power_button_first_press_time;
-
 /**
  * Protothread to monitor the button state to trigger short and double press actions.
  * @param [in]  button_pressed      The current button state.
@@ -67,8 +63,7 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
         PT_WAIT_UNTIL(pt, button_pressed);
         PT_WAIT_UNTIL(pt, !button_pressed);
 
-        power_button_first_press_time = pbdrv_clock_get_ms();
-        PT_WAIT_UNTIL(pt, button_pressed || pbdrv_clock_get_ms() - power_button_first_press_time > POWER_BUTTON_DOUBLE_PRESS_MS);
+        PT_WAIT_UNTIL(pt, button_pressed || pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, false, POWER_BUTTON_DOUBLE_PRESS_MS));
 
         if (!button_pressed) {
             // Short press completed
